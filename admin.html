@@ -2,320 +2,145 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Delicias Curazao</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
 
-<!-- HEADER -->
-<header class="bg-orange-600 text-white p-4 shadow-lg">
-  <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <h1 class="text-2xl font-bold">🍔 Panel Admin</h1>
-    <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600">
-      Cerrar Sesión
-    </button>
-  </div>
+<header class="bg-orange-600 text-white p-4 flex justify-between items-center">
+  <h1 class="text-xl font-bold">🍔 Admin - Delicias Curazao</h1>
+  <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded">
+    Cerrar sesión
+  </button>
 </header>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-lg shadow-lg">
-  <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
-  <input type="password" id="adminPassword" placeholder="Contraseña" 
-    class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-orange-500">
-  <button onclick="login()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600">
+<div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white p-6 rounded shadow">
+  <h2 class="text-xl font-bold mb-4 text-center">Ingreso Admin</h2>
+  <input id="password" type="password" placeholder="Contraseña"
+    class="border p-2 w-full mb-3">
+  <button onclick="login()"
+    class="bg-orange-500 text-white w-full py-2 rounded">
     Entrar
   </button>
 </div>
 
-<!-- PANEL ADMIN -->
-<div id="adminPanel" class="hidden max-w-7xl mx-auto p-4">
-  
-  <!-- TABS -->
-  <div class="bg-white rounded-lg shadow-lg mb-6">
-    <div class="flex border-b">
-      <button onclick="showTab('products')" id="tabProducts" 
-        class="flex-1 px-6 py-4 font-semibold border-b-2 border-orange-500 text-orange-600">
-        📦 Productos
-      </button>
-      <button onclick="showTab('promos')" id="tabPromos" 
-        class="flex-1 px-6 py-4 font-semibold text-gray-600 hover:bg-gray-50">
-        🎁 Promociones
-      </button>
-      <button onclick="showTab('orders')" id="tabOrders" 
-        class="flex-1 px-6 py-4 font-semibold text-gray-600 hover:bg-gray-50">
-        📋 Pedidos Hoy
-      </button>
-    </div>
+<!-- PANEL -->
+<div id="panel" class="hidden max-w-6xl mx-auto p-4">
+
+  <h2 class="text-2xl font-bold mb-4">📋 Pedidos</h2>
+
+  <div class="flex gap-2 mb-4">
+    <button onclick="filterStatus('ALL')" class="px-3 py-1 bg-gray-300 rounded">Todos</button>
+    <button onclick="filterStatus('PENDING')" class="px-3 py-1 bg-yellow-400 rounded">Pendientes</button>
+    <button onclick="filterStatus('ACCEPTED')" class="px-3 py-1 bg-blue-400 rounded">Aceptados</button>
+    <button onclick="filterStatus('DELIVERED')" class="px-3 py-1 bg-green-400 rounded">Entregados</button>
   </div>
 
-  <!-- TAB: PRODUCTOS -->
-  <div id="contentProducts" class="space-y-4">
-    <div class="bg-white p-6 rounded-lg shadow">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">Mis Productos</h2>
-        <button onclick="addProduct()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-          + Agregar Producto
-        </button>
-      </div>
-      
-      <div id="productsList" class="space-y-3">
-        <!-- Se llenan dinámicamente -->
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: PROMOCIONES -->
-  <div id="contentPromos" class="hidden space-y-4">
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-xl font-bold mb-4">Promociones Activas</h2>
-      
-      <div class="space-y-4">
-        <div class="border rounded-lg p-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <h3 class="font-bold text-lg">🎉 Domicilio Gratis Curazao</h3>
-              <p class="text-sm text-gray-600">Promoción permanente</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked class="sr-only peer">
-              <div class="w-11 h-6 bg-green-500 rounded-full peer"></div>
-            </label>
-          </div>
-        </div>
-
-        <div class="border rounded-lg p-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <h3 class="font-bold text-lg">🔥 Oferta Fin de Semana</h3>
-              <p class="text-sm text-gray-600">20% descuento en combos</p>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" onchange="togglePromo('weekend')" class="sr-only peer">
-              <div class="w-11 h-6 bg-gray-200 peer-checked:bg-green-500 rounded-full peer"></div>
-            </label>
-          </div>
-        </div>
-
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-bold mb-3">➕ Crear Nueva Promoción</h3>
-          <input type="text" placeholder="Nombre de la promo" 
-            class="w-full px-4 py-2 border rounded mb-2">
-          <input type="number" placeholder="% Descuento" 
-            class="w-full px-4 py-2 border rounded mb-2">
-          <button class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-            Crear Promoción
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: PEDIDOS -->
-  <div id="contentOrders" class="hidden space-y-4">
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-xl font-bold mb-4">Pedidos de Hoy</h2>
-      
-      <div class="grid gap-4">
-        <div class="border-l-4 border-yellow-500 bg-yellow-50 p-4 rounded">
-          <div class="flex justify-between">
-            <div>
-              <span class="font-bold text-lg">#PED123456</span>
-              <span class="ml-2 bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">Pendiente</span>
-            </div>
-            <span class="text-lg font-bold">$45,000</span>
-          </div>
-          <p class="text-sm text-gray-600 mt-2">Juan Pérez - Curazao Torre 3 Apto 819</p>
-          <p class="text-xs text-gray-500">Hace 5 minutos</p>
-          <div class="mt-3 flex gap-2">
-            <button class="bg-green-500 text-white px-4 py-1 rounded text-sm">✅ Aceptar</button>
-            <button class="bg-red-500 text-white px-4 py-1 rounded text-sm">❌ Rechazar</button>
-          </div>
-        </div>
-
-        <div class="border-l-4 border-green-500 bg-green-50 p-4 rounded">
-          <div class="flex justify-between">
-            <div>
-              <span class="font-bold text-lg">#PED123455</span>
-              <span class="ml-2 bg-green-200 text-green-800 px-2 py-1 rounded text-xs">Entregado</span>
-            </div>
-            <span class="text-lg font-bold">$38,000</span>
-          </div>
-          <p class="text-sm text-gray-600 mt-2">María López - Toledo</p>
-          <p class="text-xs text-gray-500">Hace 1 hora</p>
-        </div>
-      </div>
-
-      <div class="mt-6 bg-gray-100 p-4 rounded">
-        <h3 class="font-bold mb-2">📊 Resumen del Día</h3>
-        <div class="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p class="text-2xl font-bold text-blue-600">12</p>
-            <p class="text-sm text-gray-600">Pedidos</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-green-600">$480,000</p>
-            <p class="text-sm text-gray-600">Ventas</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-orange-600">$40,000</p>
-            <p class="text-sm text-gray-600">Promedio</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- MODAL EDITAR PRODUCTO -->
-<div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-lg max-w-md w-full p-6">
-    <h3 class="text-xl font-bold mb-4">Editar Producto</h3>
-    
-    <div class="space-y-3">
-      <input type="text" id="editName" placeholder="Nombre" 
-        class="w-full px-4 py-2 border rounded">
-      <textarea id="editDesc" placeholder="Descripción" rows="2"
-        class="w-full px-4 py-2 border rounded"></textarea>
-      <input type="number" id="editPrice" placeholder="Precio" 
-        class="w-full px-4 py-2 border rounded">
-      <input type="text" id="editCategory" placeholder="Categoría" 
-        class="w-full px-4 py-2 border rounded">
-    </div>
-
-    <div class="mt-4 flex gap-2">
-      <button onclick="saveProduct()" class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600">
-        Guardar
-      </button>
-      <button onclick="closeModal()" class="flex-1 bg-gray-300 py-2 rounded hover:bg-gray-400">
-        Cancelar
-      </button>
-    </div>
-  </div>
+  <div id="orders" class="space-y-3"></div>
 </div>
 
 <script>
-// ⚠️ CONFIGURACIÓN
-const ADMIN_PASSWORD = "admin123"; // CAMBIA ESTA CONTRASEÑA
+/******** CONFIG ********/
+const API_URL = "https://script.google.com/macros/s/AKfycbzz2MALrSrpNMlTGlDWRbrEIYvdNSXuto1nYSd6XQ-6R_c2cxyu3c3zeE-_ecQVmNokiw/exec";
+const ADMIN_PASSWORD = "admin123";
 
-// Datos de ejemplo (en producción vendrían de una base de datos)
-let products = [
-  { id: 1, name: "Tilapia Frita", price: 25000, category: "Pescados", active: true },
-  { id: 2, name: "Hamburguesa Doble", price: 22000, category: "Hamburguesas", active: true },
-  { id: 3, name: "Waffles Premium", price: 15000, category: "Waffles", active: true },
-  { id: 4, name: "Jugo Natural", price: 5000, category: "Bebidas", active: true }
-];
+let ORDERS = [];
+let CURRENT_FILTER = "ALL";
 
-let currentProduct = null;
-
-// LOGIN
+/******** LOGIN ********/
 function login() {
-  const password = document.getElementById('adminPassword').value;
-  if (password === ADMIN_PASSWORD) {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-    loadProducts();
+  if (password.value === ADMIN_PASSWORD) {
+    loginScreen.classList.add("hidden");
+    panel.classList.remove("hidden");
+    loadOrders();
   } else {
-    alert('❌ Contraseña incorrecta');
+    alert("❌ Contraseña incorrecta");
   }
 }
 
 function logout() {
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('adminPassword').value = '';
+  location.reload();
 }
 
-// TABS
-function showTab(tab) {
-  // Ocultar todos
-  document.getElementById('contentProducts').classList.add('hidden');
-  document.getElementById('contentPromos').classList.add('hidden');
-  document.getElementById('contentOrders').classList.add('hidden');
-  
-  // Resetear tabs
-  document.getElementById('tabProducts').className = 'flex-1 px-6 py-4 font-semibold text-gray-600 hover:bg-gray-50';
-  document.getElementById('tabPromos').className = 'flex-1 px-6 py-4 font-semibold text-gray-600 hover:bg-gray-50';
-  document.getElementById('tabOrders').className = 'flex-1 px-6 py-4 font-semibold text-gray-600 hover:bg-gray-50';
-  
-  // Mostrar seleccionado
-  if (tab === 'products') {
-    document.getElementById('contentProducts').classList.remove('hidden');
-    document.getElementById('tabProducts').className = 'flex-1 px-6 py-4 font-semibold border-b-2 border-orange-500 text-orange-600';
-  } else if (tab === 'promos') {
-    document.getElementById('contentPromos').classList.remove('hidden');
-    document.getElementById('tabPromos').className = 'flex-1 px-6 py-4 font-semibold border-b-2 border-orange-500 text-orange-600';
-  } else if (tab === 'orders') {
-    document.getElementById('contentOrders').classList.remove('hidden');
-    document.getElementById('tabOrders').className = 'flex-1 px-6 py-4 font-semibold border-b-2 border-orange-500 text-orange-600';
-  }
+/******** LOAD ORDERS (JSONP) ********/
+function loadOrders() {
+  const s = document.createElement("script");
+  s.src = API_URL + "?action=getOrders&callback=onOrdersLoaded";
+  document.body.appendChild(s);
 }
 
-// PRODUCTOS
-function loadProducts() {
-  const container = document.getElementById('productsList');
-  
-  container.innerHTML = products.map(p => `
-    <div class="flex items-center justify-between border rounded-lg p-4 hover:bg-gray-50">
-      <div class="flex-1">
-        <h3 class="font-bold">${p.name}</h3>
-        <p class="text-sm text-gray-600">${p.category}</p>
+function onOrdersLoaded(data) {
+  ORDERS = data.reverse();
+  renderOrders();
+}
+
+/******** FILTER ********/
+function filterStatus(status) {
+  CURRENT_FILTER = status;
+  renderOrders();
+}
+
+/******** RENDER ********/
+function renderOrders() {
+  const list = CURRENT_FILTER === "ALL"
+    ? ORDERS
+    : ORDERS.filter(o => o.status === CURRENT_FILTER);
+
+  orders.innerHTML = list.map(o => `
+    <div class="bg-white p-4 rounded shadow border-l-4 ${statusColor(o.status)}">
+      <div class="flex justify-between">
+        <div>
+          <h3 class="font-bold">${o.orderId}</h3>
+          <p class="text-sm">${o.name} - ${o.phone}</p>
+          <p class="text-sm text-gray-600">${o.address}</p>
+          <p class="text-xs text-gray-400">${o.date}</p>
+        </div>
+        <div class="text-right">
+          <p class="font-bold text-lg">$${o.total}</p>
+          <span class="text-xs px-2 py-1 rounded bg-gray-200">${o.status}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-4">
-        <span class="text-lg font-bold text-green-600">$${p.price.toLocaleString()}</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" ${p.active ? 'checked' : ''} 
-            onchange="toggleProduct(${p.id})" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-checked:bg-green-500 rounded-full peer"></div>
-        </label>
-        <button onclick="editProduct(${p.id})" 
-          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-          Editar
-        </button>
+
+      <p class="mt-2 text-sm"><b>Pedido:</b> ${o.items}</p>
+
+      <div class="flex gap-2 mt-3">
+        ${o.status === "PENDING" ? `
+          <button onclick="updateStatus('${o.orderId}','ACCEPTED')"
+            class="bg-blue-500 text-white px-3 py-1 rounded">Aceptar</button>
+        ` : ""}
+        ${o.status === "ACCEPTED" ? `
+          <button onclick="updateStatus('${o.orderId}','IN_DELIVERY')"
+            class="bg-orange-500 text-white px-3 py-1 rounded">Enviar</button>
+        ` : ""}
+        ${o.status === "IN_DELIVERY" ? `
+          <button onclick="updateStatus('${o.orderId}','DELIVERED')"
+            class="bg-green-500 text-white px-3 py-1 rounded">Entregado</button>
+        ` : ""}
       </div>
     </div>
-  `).join('');
+  `).join("");
 }
 
-function toggleProduct(id) {
-  const product = products.find(p => p.id === id);
-  product.active = !product.active;
-  alert(`${product.name} ${product.active ? 'activado' : 'desactivado'}`);
+/******** STATUS ********/
+function statusColor(status) {
+  if (status === "PENDING") return "border-yellow-400";
+  if (status === "ACCEPTED") return "border-blue-400";
+  if (status === "IN_DELIVERY") return "border-orange-400";
+  if (status === "DELIVERED") return "border-green-400";
+  return "border-gray-300";
 }
 
-function editProduct(id) {
-  currentProduct = products.find(p => p.id === id);
-  document.getElementById('editName').value = currentProduct.name;
-  document.getElementById('editDesc').value = currentProduct.description || '';
-  document.getElementById('editPrice').value = currentProduct.price;
-  document.getElementById('editCategory').value = currentProduct.category;
-  document.getElementById('editModal').classList.remove('hidden');
-}
-
-function saveProduct() {
-  if (currentProduct) {
-    currentProduct.name = document.getElementById('editName').value;
-    currentProduct.price = parseInt(document.getElementById('editPrice').value);
-    currentProduct.category = document.getElementById('editCategory').value;
-    loadProducts();
-    closeModal();
-    alert('✅ Producto actualizado');
-  }
-}
-
-function closeModal() {
-  document.getElementById('editModal').classList.add('hidden');
-  currentProduct = null;
-}
-
-function addProduct() {
-  alert('Función para agregar nuevo producto (próximamente)');
-}
-
-// PROMOCIONES
-function togglePromo(type) {
-  alert(`Promoción ${type} activada/desactivada`);
+function updateStatus(id, status) {
+  fetch(API_URL +
+    "?action=updateOrderStatus" +
+    "&id=" + id +
+    "&status=" + status
+  ).then(() => {
+    loadOrders();
+  });
 }
 </script>
 
