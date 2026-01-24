@@ -5,59 +5,124 @@
   <title>Admin - Delicias Curazao</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
 
-<header class="bg-orange-600 text-white p-4 flex justify-between items-center">
-  <h1 class="text-xl font-bold">🍔 Admin - Delicias Curazao</h1>
-  <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded">
+<header class="bg-orange-600 text-white p-4 flex justify-between items-center sticky top-0 z-10 shadow-lg">
+  <div>
+    <h1 class="text-xl font-bold">🍔 Admin - Delicias Curazao</h1>
+    <p class="text-sm opacity-90" id="lastUpdate">Última actualización: --:--</p>
+  </div>
+  <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition">
     Cerrar sesión
   </button>
 </header>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white p-6 rounded shadow">
-  <h2 class="text-xl font-bold mb-4 text-center">Ingreso Admin</h2>
+<div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">🔐 Ingreso Admin</h2>
   <input id="password" type="password" placeholder="Contraseña"
-    class="border p-2 w-full mb-3">
+    class="border border-gray-300 p-3 w-full mb-4 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+    onkeypress="if(event.key==='Enter') login()">
   <button onclick="login()"
-    class="bg-orange-500 text-white w-full py-2 rounded">
+    class="bg-orange-500 text-white w-full py-3 rounded-lg font-bold hover:bg-orange-600 transition">
     Entrar
   </button>
 </div>
 
 <!-- PANEL -->
 <div id="panel" class="hidden max-w-6xl mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4">📋 Pedidos</h2>
-
-  <div class="flex gap-2 mb-4 flex-wrap">
-    <button onclick="filterStatus('ALL')" class="px-3 py-1 bg-gray-300 rounded">Todos</button>
-    <button onclick="filterStatus('NUEVO')" class="px-3 py-1 bg-yellow-400 rounded">Nuevos</button>
-    <button onclick="filterStatus('ACEPTADO')" class="px-3 py-1 bg-blue-400 rounded">Aceptados</button>
-    <button onclick="filterStatus('EN_CAMINO')" class="px-3 py-1 bg-orange-400 rounded">En camino</button>
-    <button onclick="filterStatus('ENTREGADO')" class="px-3 py-1 bg-green-400 rounded">Entregados</button>
+  
+  <!-- Estadísticas -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+      <p class="text-3xl font-bold text-orange-600" id="statTotal">0</p>
+      <p class="text-sm text-gray-600">Total Pedidos</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <p class="text-3xl font-bold text-yellow-600" id="statNuevos">0</p>
+      <p class="text-sm text-gray-600">Nuevos</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <p class="text-3xl font-bold text-blue-600" id="statEnCamino">0</p>
+      <p class="text-sm text-gray-600">En Camino</p>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <p class="text-3xl font-bold text-green-600" id="statEntregados">0</p>
+      <p class="text-sm text-gray-600">Entregados</p>
+    </div>
   </div>
 
-  <div id="orders" class="space-y-3"></div>
+  <!-- Filtros -->
+  <div class="bg-white p-4 rounded-lg shadow mb-4">
+    <h2 class="text-lg font-bold mb-3">📊 Filtrar Pedidos</h2>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="filterStatus('ALL')" id="filterALL" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+        Todos
+      </button>
+      <button onclick="filterStatus('NUEVO')" id="filterNUEVO" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
+        Nuevos
+      </button>
+      <button onclick="filterStatus('ACEPTADO')" id="filterACEPTADO" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+        Aceptados
+      </button>
+      <button onclick="filterStatus('EN_CAMINO')" id="filterEN_CAMINO" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+        En Camino
+      </button>
+      <button onclick="filterStatus('ENTREGADO')" id="filterENTREGADO" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+        Entregados
+      </button>
+      <button onclick="loadOrders()" class="ml-auto px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de pedidos -->
+  <h2 class="text-2xl font-bold mb-4">📋 Pedidos (<span id="orderCount">0</span>)</h2>
+  <div id="orders" class="space-y-4"></div>
 </div>
 
 <script>
-/******** CONFIG ********/
-const API_URL =
-"https://script.google.com/macros/s/AKfycbzRgJ1HNHMVOfjHk-i9PLFtRLfjtzSfQ-LdCvzfLoJJ8niMIO7ULW1tImbTz1K2DrY1ZQ/exec";
-
+/* ========================================
+   CONFIGURACIÓN
+   ======================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbzwpkeSIFbeVGft7TKd6L8Q4VawKvOmeAE64n1uaWzxIecllaz2kuiHAalO1_mv2eq9/exec";
 const ADMIN_PASSWORD = "admin123";
 
 let ORDERS = [];
 let CURRENT_FILTER = "ALL";
 
-/******** LOGIN ********/
+/* ========================================
+   LOGIN
+   ======================================== */
 function login() {
-  if (password.value === ADMIN_PASSWORD) {
-    loginScreen.classList.add("hidden");
-    panel.classList.remove("hidden");
+  const pass = document.getElementById('password').value;
+  if (pass === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').classList.add("hidden");
+    document.getElementById('panel').classList.remove("hidden");
     loadOrders();
+    
+    // Auto-actualizar cada 30 segundos
+    setInterval(loadOrders, 30000);
   } else {
     alert("❌ Contraseña incorrecta");
   }
@@ -67,81 +132,246 @@ function logout() {
   location.reload();
 }
 
-/******** LOAD PEDIDOS ********/
+/* ========================================
+   CARGAR PEDIDOS
+   ======================================== */
 async function loadOrders() {
-  const res = await fetch(API_URL + "?action=getPedidos");
-  ORDERS = (await res.json()).reverse();
-  renderOrders();
+  try {
+    const response = await fetch(`${API_URL}?action=getPedidos`);
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('Error:', data.error);
+      document.getElementById('orders').innerHTML = `
+        <div class="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg">
+          ⚠️ Error al cargar pedidos: ${data.error}
+        </div>
+      `;
+      return;
+    }
+    
+    // Ordenar por fecha más reciente primero
+    ORDERS = data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    // Actualizar estadísticas
+    updateStats();
+    
+    // Renderizar pedidos
+    renderOrders();
+    
+    // Actualizar hora
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = `Última actualización: ${now.toLocaleTimeString()}`;
+    
+  } catch (error) {
+    console.error('Error al cargar pedidos:', error);
+    document.getElementById('orders').innerHTML = `
+      <div class="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg">
+        ⚠️ Error de conexión: ${error.message}
+      </div>
+    `;
+  }
 }
 
-/******** FILTER ********/
+/* ========================================
+   ACTUALIZAR ESTADÍSTICAS
+   ======================================== */
+function updateStats() {
+  const stats = {
+    total: ORDERS.length,
+    nuevos: ORDERS.filter(o => o.estado === 'NUEVO').length,
+    enCamino: ORDERS.filter(o => o.estado === 'EN_CAMINO').length,
+    entregados: ORDERS.filter(o => o.estado === 'ENTREGADO').length
+  };
+  
+  document.getElementById('statTotal').textContent = stats.total;
+  document.getElementById('statNuevos').textContent = stats.nuevos;
+  document.getElementById('statEnCamino').textContent = stats.enCamino;
+  document.getElementById('statEntregados').textContent = stats.entregados;
+}
+
+/* ========================================
+   FILTROS
+   ======================================== */
 function filterStatus(status) {
   CURRENT_FILTER = status;
+  
+  // Actualizar botones
+  ['ALL', 'NUEVO', 'ACEPTADO', 'EN_CAMINO', 'ENTREGADO'].forEach(s => {
+    const btn = document.getElementById('filter' + s);
+    if (btn) {
+      btn.classList.remove('ring-2', 'ring-offset-2');
+      if (s === status) {
+        btn.classList.add('ring-2', 'ring-offset-2');
+      }
+    }
+  });
+  
   renderOrders();
 }
 
-/******** RENDER ********/
+/* ========================================
+   RENDERIZAR PEDIDOS
+   ======================================== */
 function renderOrders() {
-  const list = CURRENT_FILTER === "ALL"
+  const filteredOrders = CURRENT_FILTER === "ALL"
     ? ORDERS
     : ORDERS.filter(o => o.estado === CURRENT_FILTER);
 
-  orders.innerHTML = list.map(o => `
-    <div class="bg-white p-4 rounded shadow border-l-4 ${statusColor(o.estado)}">
-      <div class="flex justify-between">
-        <div>
-          <h3 class="font-bold">${o.id}</h3>
-          <p class="text-sm">${o.cliente} - ${o.telefono}</p>
-          <p class="text-sm text-gray-600">${o.direccion}</p>
-          <p class="text-xs text-gray-400">${new Date(o.fecha).toLocaleString()}</p>
-        </div>
-        <div class="text-right">
-          <p class="font-bold text-lg">$${Number(o.total).toLocaleString()}</p>
-          <span class="text-xs px-2 py-1 rounded bg-gray-200">${o.estado}</span>
-        </div>
-      </div>
+  document.getElementById('orderCount').textContent = filteredOrders.length;
 
-      <div class="mt-2 text-sm">
-        <b>Pedido:</b>
-        <ul class="list-disc ml-5">
-          ${o.productos.map(p => `<li>${p.qty}x ${p.name}</li>`).join("")}
-        </ul>
+  if (filteredOrders.length === 0) {
+    document.getElementById('orders').innerHTML = `
+      <div class="bg-white p-8 rounded-lg shadow text-center">
+        <p class="text-gray-500 text-lg">No hay pedidos en esta categoría</p>
       </div>
+    `;
+    return;
+  }
 
-      <div class="flex gap-2 mt-3 flex-wrap">
-        ${o.estado === "NUEVO" ? `
-          <button onclick="updateStatus('${o.id}','ACEPTADO')"
-            class="bg-blue-500 text-white px-3 py-1 rounded">Aceptar</button>
-        ` : ""}
-        ${o.estado === "ACEPTADO" ? `
-          <button onclick="updateStatus('${o.id}','EN_CAMINO')"
-            class="bg-orange-500 text-white px-3 py-1 rounded">Enviar</button>
-        ` : ""}
-        ${o.estado === "EN_CAMINO" ? `
-          <button onclick="updateStatus('${o.id}','ENTREGADO')"
-            class="bg-green-500 text-white px-3 py-1 rounded">Entregado</button>
-        ` : ""}
+  document.getElementById('orders').innerHTML = filteredOrders.map(order => {
+    const fecha = new Date(order.fecha);
+    const fechaStr = fecha.toLocaleDateString('es-CO', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    return `
+      <div class="bg-white p-5 rounded-lg shadow-md border-l-4 ${getStatusColor(order.estado)} hover:shadow-lg transition">
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h3 class="font-bold text-lg text-gray-800">${order.id}</h3>
+            <p class="text-sm text-gray-600">${fechaStr}</p>
+            <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(order.estado)}">
+              ${getStatusText(order.estado)}
+            </span>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-orange-600">$${Number(order.total).toLocaleString()}</p>
+            <p class="text-xs text-gray-500">Subtotal: $${Number(order.subtotal).toLocaleString()}</p>
+            <p class="text-xs text-gray-500">Domicilio: $${Number(order.domicilio).toLocaleString()}</p>
+          </div>
+        </div>
+
+        <!-- Cliente -->
+        <div class="bg-gray-50 p-3 rounded-lg mb-3">
+          <p class="font-semibold text-gray-800">👤 ${order.cliente}</p>
+          <p class="text-sm text-gray-600">📞 ${order.telefono}</p>
+          <p class="text-sm text-gray-600">📍 ${order.direccion}</p>
+          ${order.domiciliario ? `<p class="text-sm text-blue-600">🛵 Domiciliario: ${order.domiciliario}</p>` : ''}
+        </div>
+
+        <!-- Productos -->
+        <div class="mb-3">
+          <p class="font-semibold text-gray-700 mb-2">🍔 Pedido:</p>
+          <ul class="list-disc ml-5 text-sm text-gray-600">
+            ${order.productos.map(p => `<li>${p.qty}x ${p.name} - $${(p.price * p.qty).toLocaleString()}</li>`).join('')}
+          </ul>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex gap-2 flex-wrap pt-3 border-t border-gray-200">
+          ${order.estado === 'NUEVO' ? `
+            <button onclick="updateStatus('${order.id}', 'ACEPTADO')"
+              class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-semibold flex-1 sm:flex-none">
+              ✅ Aceptar Pedido
+            </button>
+          ` : ''}
+          
+          ${order.estado === 'ACEPTADO' ? `
+            <button onclick="updateStatus('${order.id}', 'EN_CAMINO')"
+              class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold flex-1 sm:flex-none">
+              🛵 Marcar En Camino
+            </button>
+          ` : ''}
+          
+          ${order.estado === 'EN_CAMINO' ? `
+            <button onclick="updateStatus('${order.id}', 'ENTREGADO')"
+              class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold flex-1 sm:flex-none">
+              ✅ Marcar Entregado
+            </button>
+          ` : ''}
+          
+          <a href="https://wa.me/57${order.telefono}" target="_blank"
+            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-semibold flex items-center justify-center gap-2 flex-1 sm:flex-none">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            WhatsApp
+          </a>
+        </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
-/******** STATUS ********/
-function statusColor(status) {
-  return {
-    NUEVO: "border-yellow-400",
-    ACEPTADO: "border-blue-400",
-    EN_CAMINO: "border-orange-400",
-    ENTREGADO: "border-green-400"
-  }[status] || "border-gray-300";
+/* ========================================
+   ACTUALIZAR ESTADO
+   ======================================== */
+async function updateStatus(orderId, newStatus) {
+  if (!confirm(`¿Confirmar cambio a: ${getStatusText(newStatus)}?`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}?action=updateOrder`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        id: orderId, 
+        estado: newStatus 
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert(`✅ Estado actualizado correctamente`);
+      loadOrders();
+    } else {
+      alert(`❌ Error: ${result.error}`);
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+    alert('❌ Error al actualizar el estado');
+  }
 }
 
-/******** UPDATE ********/
-function updateStatus(id, estado) {
-  fetch(API_URL + "?action=updateOrder", {
-    method: "POST",
-    body: JSON.stringify({ id, estado })
-  }).then(loadOrders);
+/* ========================================
+   HELPERS - ESTILOS
+   ======================================== */
+function getStatusColor(status) {
+  const colors = {
+    'NUEVO': 'border-yellow-500',
+    'ACEPTADO': 'border-blue-500',
+    'EN_CAMINO': 'border-orange-500',
+    'ENTREGADO': 'border-green-500'
+  };
+  return colors[status] || 'border-gray-300';
+}
+
+function getStatusBadge(status) {
+  const badges = {
+    'NUEVO': 'bg-yellow-100 text-yellow-800',
+    'ACEPTADO': 'bg-blue-100 text-blue-800',
+    'EN_CAMINO': 'bg-orange-100 text-orange-800',
+    'ENTREGADO': 'bg-green-100 text-green-800'
+  };
+  return badges[status] || 'bg-gray-100 text-gray-800';
+}
+
+function getStatusText(status) {
+  const texts = {
+    'NUEVO': '🔔 Nuevo',
+    'ACEPTADO': '👨‍🍳 Aceptado',
+    'EN_CAMINO': '🛵 En Camino',
+    'ENTREGADO': '✅ Entregado'
+  };
+  return texts[status] || status;
 }
 </script>
 

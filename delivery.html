@@ -6,10 +6,22 @@
   <title>Domiciliarios - Delicias Curazao</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .new-order { animation: pulse 1s infinite; }
+    .new-order { animation: pulse 2s infinite; }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.7; }
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -21,6 +33,7 @@
     <div>
       <h1 class="text-xl font-bold">🛵 Pedidos Disponibles</h1>
       <p class="text-sm" id="deliveryName">Domiciliario</p>
+      <p class="text-xs opacity-75" id="lastUpdate">Última actualización: --:--</p>
     </div>
     <div class="text-right">
       <p class="text-2xl font-bold" id="earnings">$0</p>
@@ -31,12 +44,12 @@
 
 <!-- LOGIN DOMICILIARIO -->
 <div id="loginScreen" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-lg shadow-lg">
-  <h2 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h2>
-  <input type="text" id="deliveryNameInput" placeholder="Tu nombre" 
-    class="w-full px-4 py-3 border rounded-lg mb-4">
-  <input type="tel" id="deliveryPhone" placeholder="Tu teléfono" 
-    class="w-full px-4 py-3 border rounded-lg mb-4">
-  <button onclick="loginDelivery()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600">
+  <h2 class="text-2xl font-bold text-center mb-6">🛵 Iniciar Sesión</h2>
+  <input type="text" id="deliveryNameInput" placeholder="Tu nombre *" 
+    class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500">
+  <input type="tel" id="deliveryPhone" placeholder="Tu teléfono *" 
+    class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500">
+  <button onclick="loginDelivery()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">
     Entrar
   </button>
 </div>
@@ -55,20 +68,30 @@
       <p class="text-xs text-gray-600">Completadas</p>
     </div>
     <div class="bg-white p-4 rounded-lg shadow text-center">
-      <p class="text-2xl font-bold text-yellow-600" id="pendingOrders">2</p>
+      <p class="text-2xl font-bold text-yellow-600" id="pendingOrders">0</p>
       <p class="text-xs text-gray-600">Disponibles</p>
     </div>
   </div>
 
   <!-- Pedidos Nuevos -->
-  <div class="mb-4">
-    <h2 class="text-lg font-bold mb-3 flex items-center gap-2">
-      🔥 Pedidos Nuevos
-      <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">2</span>
-    </h2>
+  <div class="mb-6">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-lg font-bold flex items-center gap-2">
+        🔥 Pedidos Nuevos
+        <span id="newBadge" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0</span>
+      </h2>
+      <button onclick="loadOrdersFromSheet()" class="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Actualizar
+      </button>
+    </div>
     
     <div class="space-y-3" id="newOrdersList">
-      <!-- Se llenan dinámicamente -->
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-center text-gray-500">Cargando pedidos...</p>
+      </div>
     </div>
   </div>
 
@@ -84,13 +107,11 @@
 </div>
 
 <!-- MODAL DETALLES PEDIDO -->
-<div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-lg max-w-md w-full p-6">
+<div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="closeModalOnClick(event)">
+  <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl" onclick="event.stopPropagation()">
     <h3 class="text-xl font-bold mb-4" id="modalOrderId">Pedido #123456</h3>
     
-    <div class="space-y-3 mb-4" id="modalContent">
-      <!-- Detalles del pedido -->
-    </div>
+    <div class="space-y-3 mb-4" id="modalContent"></div>
 
     <div class="bg-green-100 border border-green-300 rounded-lg p-4 mb-4">
       <p class="font-bold text-green-800 text-lg">💵 Tu Ganancia: <span id="modalEarning"></span></p>
@@ -98,51 +119,36 @@
     </div>
 
     <div class="flex gap-2">
-      <button onclick="acceptOrder()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600">
-        ✅ Aceptar Pedido
+      <button onclick="closeOrderModal()" 
+        class="flex-1 bg-gray-300 py-3 rounded-lg font-bold hover:bg-gray-400 transition">
+        Cancelar
       </button>
-      <button onclick="closeOrderModal()" class="flex-1 bg-gray-300 py-3 rounded-lg font-bold hover:bg-gray-400">
-        Cerrar
+      <button onclick="acceptOrder()" 
+        class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition">
+        ✅ Aceptar Pedido
       </button>
     </div>
   </div>
 </div>
 
 <script>
-// 🔗 CONFIGURACIÓN - PEGA LA URL DE TU APPS SCRIPT
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzFU-iPQ5jVsGySfzqWc48jLkZLwfvSjJuxclmred1eAf0OL2wRN1gE-RB5rEEUn_k9qQ/exec";
+/* ========================================
+   CONFIGURACIÓN
+   ======================================== */
+const API_URL = "https://script.google.com/macros/s/AKfycbzwpkeSIFbeVGft7TKd6L8Q4VawKvOmeAE64n1uaWzxIecllaz2kuiHAalO1_mv2eq9/exec";
 
-// Datos
+const BUSINESS_ADDRESS = "Unidad Residencial Curazao, Torre 3, Apto 819, Bello, Antioquia";
+
+// Datos del domiciliario
 let deliveryInfo = null;
 let currentOrder = null;
 let myOrders = [];
 let earnings = 0;
 let availableOrders = [];
 
-// 🔄 CARGAR PEDIDOS DESDE GOOGLE SHEETS
-async function loadOrdersFromSheet() {
-  try {
-    const response = await fetch(`${SHEET_API_URL}?action=getPedidos`);
-    const pedidos = await response.json();
-    
-    // Filtrar solo pedidos NUEVOS
-    availableOrders = pedidos.filter(p => p.estado === 'NUEVO');
-    
-    document.getElementById('pendingOrders').textContent = availableOrders.length;
-    loadOrders();
-    
-  } catch (error) {
-    console.error('Error cargando pedidos:', error);
-  }
-}
-
-// Auto-actualizar cada 30 segundos
-setInterval(() => {
-  if (deliveryInfo) {
-    loadOrdersFromSheet();
-  }
-}, 30000);
-
+/* ========================================
+   LOGIN
+   ======================================== */
 function loginDelivery() {
   const name = document.getElementById('deliveryNameInput').value.trim();
   const phone = document.getElementById('deliveryPhone').value.trim();
@@ -157,75 +163,163 @@ function loginDelivery() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('ordersScreen').classList.remove('hidden');
   
-  loadOrdersFromSheet(); // Cargar desde Google Sheets
+  loadOrdersFromSheet();
+  
+  // Auto-actualizar cada 30 segundos
+  setInterval(loadOrdersFromSheet, 30000);
 }
 
+/* ========================================
+   CARGAR PEDIDOS DESDE GOOGLE SHEETS
+   ======================================== */
+async function loadOrdersFromSheet() {
+  try {
+    const response = await fetch(`${API_URL}?action=getPedidos`);
+    const pedidos = await response.json();
+    
+    if (pedidos.error) {
+      console.error('Error:', pedidos.error);
+      return;
+    }
+    
+    // Filtrar solo pedidos NUEVOS y ACEPTADO (disponibles)
+    availableOrders = pedidos.filter(p => p.estado === 'NUEVO' || p.estado === 'ACEPTADO');
+    
+    // Actualizar estadísticas
+    updateStats();
+    
+    // Renderizar
+    loadOrders();
+    
+    // Actualizar hora
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = `Última actualización: ${now.toLocaleTimeString()}`;
+    
+  } catch (error) {
+    console.error('Error cargando pedidos:', error);
+  }
+}
+
+/* ========================================
+   ACTUALIZAR ESTADÍSTICAS
+   ======================================== */
+function updateStats() {
+  document.getElementById('pendingOrders').textContent = availableOrders.length;
+  document.getElementById('totalOrders').textContent = myOrders.length;
+  document.getElementById('completedOrders').textContent = myOrders.filter(o => o.status === 'completado').length;
+  document.getElementById('earnings').textContent = `$${earnings.toLocaleString()}`;
+  
+  const badge = document.getElementById('newBadge');
+  if (availableOrders.length > 0) {
+    badge.textContent = availableOrders.length;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+/* ========================================
+   RENDERIZAR PEDIDOS DISPONIBLES
+   ======================================== */
 function loadOrders() {
   const container = document.getElementById('newOrdersList');
   
   if (availableOrders.length === 0) {
-    container.innerHTML = '<div class="bg-white p-4 rounded-lg shadow"><p class="text-center text-gray-500">No hay pedidos disponibles</p></div>';
+    container.innerHTML = `
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-center text-gray-500">No hay pedidos disponibles</p>
+      </div>
+    `;
     return;
   }
   
-  container.innerHTML = availableOrders.map(order => `
-    <div class="bg-white border-l-4 border-yellow-500 rounded-lg shadow p-4 new-order">
-      <div class="flex justify-between items-start mb-2">
-        <div>
-          <span class="font-bold text-lg">${order.id}</span>
-          <span class="ml-2 bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">Nuevo</span>
+  container.innerHTML = availableOrders.map(order => {
+    const fecha = new Date(order.fecha);
+    const fechaStr = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    
+    // Calcular ganancia del domiciliario (el costo de domicilio)
+    const ganancia = order.domicilio || 0;
+    
+    return `
+      <div class="bg-white border-l-4 border-yellow-500 rounded-lg shadow p-4 new-order hover:shadow-lg transition">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <span class="font-bold text-lg">${order.id}</span>
+            <span class="ml-2 bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">${order.estado}</span>
+            <p class="text-xs text-gray-500 mt-1">📅 ${fechaStr}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xl font-bold text-green-600">+$${ganancia.toLocaleString()}</p>
+            <p class="text-xs text-gray-500">Tu ganancia</p>
+          </div>
         </div>
-        <div class="text-right">
-          <p class="text-xl font-bold text-green-600">${(order.domicilio || 3000).toLocaleString()}</p>
+        
+        <div class="text-sm space-y-1 mb-3">
+          <p><strong>Cliente:</strong> ${order.cliente}</p>
+          <p><strong>Teléfono:</strong> ${order.telefono}</p>
+          <p><strong>Entregar:</strong> ${order.direccion}</p>
+          <p><strong>Total a cobrar:</strong> $${order.total.toLocaleString()}</p>
         </div>
+        
+        <button onclick="viewOrder('${order.id}')" 
+          class="w-full bg-blue-500 text-white py-2 rounded font-semibold hover:bg-blue-600 transition">
+          Ver Detalles y Aceptar
+        </button>
       </div>
-      
-      <div class="text-sm space-y-1 mb-3">
-        <p><strong>Cliente:</strong> ${order.cliente}</p>
-        <p><strong>Teléfono:</strong> ${order.telefono}</p>
-        <p><strong>Entregar:</strong> ${order.direccion}</p>
-        <p><strong>Productos:</strong> ${order.productos}</p>
-      </div>
-      
-      <button onclick="viewOrder('${order.id}')" 
-        class="w-full bg-blue-500 text-white py-2 rounded font-semibold hover:bg-blue-600">
-        Ver Detalles
-      </button>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
+/* ========================================
+   VER DETALLES DEL PEDIDO
+   ======================================== */
 function viewOrder(orderId) {
   currentOrder = availableOrders.find(o => o.id === orderId);
   
+  if (!currentOrder) return;
+  
+  const ganancia = currentOrder.domicilio || 0;
+  
   document.getElementById('modalOrderId').textContent = `Pedido ${currentOrder.id}`;
-  document.getElementById('modalEarning').textContent = `$${currentOrder.earning.toLocaleString()}`;
+  document.getElementById('modalEarning').textContent = `$${ganancia.toLocaleString()}`;
   document.getElementById('modalTotal').textContent = `$${currentOrder.total.toLocaleString()}`;
+  
+  // Formatear productos
+  const productosHTML = currentOrder.productos.map(p => 
+    `<p class="text-sm">• ${p.qty}x ${p.name}</p>`
+  ).join('');
   
   document.getElementById('modalContent').innerHTML = `
     <div class="bg-blue-50 p-3 rounded">
       <p class="font-semibold text-blue-900">📍 Recoger en:</p>
-      <p class="text-sm">${currentOrder.pickupAddress}</p>
+      <p class="text-sm">${BUSINESS_ADDRESS}</p>
     </div>
     
     <div class="bg-orange-50 p-3 rounded">
       <p class="font-semibold text-orange-900">🏠 Entregar a:</p>
-      <p class="text-sm">${currentOrder.client} - ${currentOrder.phone}</p>
-      <p class="text-sm">${currentOrder.address}</p>
+      <p class="text-sm"><strong>${currentOrder.cliente}</strong></p>
+      <p class="text-sm">📞 ${currentOrder.telefono}</p>
+      <p class="text-sm">📍 ${currentOrder.direccion}</p>
     </div>
     
     <div class="border-t pt-3">
       <p class="font-semibold mb-2">📦 Productos:</p>
-      ${currentOrder.items.map(item => `<p class="text-sm">• ${item}</p>`).join('')}
+      ${productosHTML}
+    </div>
+    
+    <div class="bg-gray-50 p-3 rounded">
+      <p class="text-sm"><strong>Subtotal productos:</strong> $${currentOrder.subtotal.toLocaleString()}</p>
+      <p class="text-sm"><strong>Domicilio:</strong> $${currentOrder.domicilio.toLocaleString()}</p>
+      <p class="text-lg font-bold text-orange-600 mt-1">Total a cobrar: $${currentOrder.total.toLocaleString()}</p>
     </div>
     
     <div class="flex gap-2 text-sm">
-      <a href="https://wa.me/57${currentOrder.phone}" target="_blank" 
-        class="flex-1 bg-green-500 text-white py-2 rounded text-center">
+      <a href="https://wa.me/57${currentOrder.telefono}" target="_blank" 
+        class="flex-1 bg-green-500 text-white py-2 rounded text-center hover:bg-green-600 transition">
         📞 Llamar Cliente
       </a>
-      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentOrder.address)}" 
-        target="_blank" class="flex-1 bg-blue-500 text-white py-2 rounded text-center">
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentOrder.direccion)}" 
+        target="_blank" class="flex-1 bg-blue-500 text-white py-2 rounded text-center hover:bg-blue-600 transition">
         🗺️ Ver Mapa
       </a>
     </div>
@@ -234,67 +328,155 @@ function viewOrder(orderId) {
   document.getElementById('orderModal').classList.remove('hidden');
 }
 
-function acceptOrder() {
-  if (!currentOrder) return;
+/* ========================================
+   ACEPTAR PEDIDO
+   ======================================== */
+async function acceptOrder() {
+  if (!currentOrder || !deliveryInfo) return;
   
-  myOrders.push({...currentOrder, status: 'activo', acceptedAt: new Date()});
-  earnings += currentOrder.earning;
+  // Agregar a mis pedidos
+  myOrders.push({
+    ...currentOrder, 
+    status: 'activo', 
+    acceptedAt: new Date()
+  });
   
-  document.getElementById('earnings').textContent = `$${earnings.toLocaleString()}`;
-  document.getElementById('completedOrders').textContent = myOrders.filter(o => o.status === 'completado').length;
-  document.getElementById('totalOrders').textContent = myOrders.length;
+  earnings += (currentOrder.domicilio || 0);
   
-  // Remover de disponibles
-  const index = availableOrders.findIndex(o => o.id === currentOrder.id);
-  availableOrders.splice(index, 1);
-  
-  document.getElementById('pendingOrders').textContent = availableOrders.length;
-  
-  alert('✅ Pedido aceptado! Revisa "Mis Pedidos Activos"');
-  
-  closeOrderModal();
-  loadOrders();
-  loadMyOrders();
+  // Actualizar en Google Sheets
+  try {
+    const response = await fetch(`${API_URL}?action=updateOrder`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        id: currentOrder.id, 
+        estado: 'EN_CAMINO',
+        domiciliario: deliveryInfo.name
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Remover de disponibles
+      availableOrders = availableOrders.filter(o => o.id !== currentOrder.id);
+      
+      updateStats();
+      alert(`✅ Pedido ${currentOrder.id} aceptado!\nRevisa "Mis Pedidos Activos"`);
+      
+      closeOrderModal();
+      loadOrders();
+      loadMyOrders();
+    } else {
+      alert('❌ Error al actualizar el pedido: ' + result.error);
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+    alert('❌ Error al aceptar el pedido');
+  }
 }
 
+/* ========================================
+   RENDERIZAR MIS PEDIDOS
+   ======================================== */
 function loadMyOrders() {
   const container = document.getElementById('myOrdersList');
   
-  if (myOrders.length === 0) {
-    container.innerHTML = '<div class="bg-white p-4 rounded-lg shadow"><p class="text-center text-gray-500">No tienes pedidos activos</p></div>';
+  const activeOrders = myOrders.filter(o => o.status === 'activo');
+  
+  if (activeOrders.length === 0) {
+    container.innerHTML = `
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-center text-gray-500">No tienes pedidos activos</p>
+      </div>
+    `;
     return;
   }
   
-  container.innerHTML = myOrders.map(order => `
+  container.innerHTML = activeOrders.map(order => `
     <div class="bg-white border-l-4 border-green-500 rounded-lg shadow p-4">
       <div class="flex justify-between mb-2">
-        <span class="font-bold">${order.id}</span>
-        <span class="bg-green-200 text-green-800 px-2 py-1 rounded text-xs">En Progreso</span>
+        <div>
+          <span class="font-bold">${order.id}</span>
+          <span class="ml-2 bg-orange-200 text-orange-800 px-2 py-1 rounded text-xs">En Progreso</span>
+        </div>
+        <span class="font-bold text-green-600">+$${(order.domicilio || 0).toLocaleString()}</span>
       </div>
-      <p class="text-sm mb-2"><strong>Entregar:</strong> ${order.address}</p>
-      <button onclick="completeOrder('${order.id}')" 
-        class="w-full bg-green-500 text-white py-2 rounded font-semibold">
-        ✅ Marcar como Entregado
-      </button>
+      <p class="text-sm mb-2"><strong>Cliente:</strong> ${order.cliente}</p>
+      <p class="text-sm mb-2"><strong>Entregar:</strong> ${order.direccion}</p>
+      <p class="text-sm mb-3"><strong>Cobrar:</strong> $${order.total.toLocaleString()}</p>
+      
+      <div class="flex gap-2">
+        <a href="https://wa.me/57${order.telefono}" target="_blank"
+          class="flex-1 bg-green-500 text-white py-2 rounded text-center hover:bg-green-600 transition text-sm">
+          📞 Llamar
+        </a>
+        <button onclick="completeOrder('${order.id}')" 
+          class="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition font-semibold text-sm">
+          ✅ Entregado
+        </button>
+      </div>
     </div>
   `).join('');
 }
 
-function completeOrder(orderId) {
+/* ========================================
+   COMPLETAR PEDIDO
+   ======================================== */
+async function completeOrder(orderId) {
   const order = myOrders.find(o => o.id === orderId);
-  order.status = 'completado';
   
-  document.getElementById('completedOrders').textContent = myOrders.filter(o => o.status === 'completado').length;
+  if (!order) return;
   
-  alert(`✅ ¡Pedido ${orderId} completado! +$${order.earning.toLocaleString()}`);
+  if (!confirm(`¿Confirmar que entregaste el pedido ${orderId}?`)) {
+    return;
+  }
   
-  myOrders = myOrders.filter(o => o.status !== 'completado');
-  loadMyOrders();
+  try {
+    // Actualizar en Google Sheets
+    const response = await fetch(`${API_URL}?action=updateOrder`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        id: orderId, 
+        estado: 'ENTREGADO'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      order.status = 'completado';
+      updateStats();
+      
+      alert(`✅ ¡Pedido ${orderId} completado!\n💰 Ganaste: $${(order.domicilio || 0).toLocaleString()}`);
+      
+      // Remover de activos después de 2 segundos
+      setTimeout(() => {
+        myOrders = myOrders.filter(o => o.id !== orderId);
+        loadMyOrders();
+      }, 2000);
+    } else {
+      alert('❌ Error al completar el pedido: ' + result.error);
+    }
+    
+  } catch (error) {
+    console.error('Error:', error);
+    alert('❌ Error al completar el pedido');
+  }
 }
 
+/* ========================================
+   CERRAR MODAL
+   ======================================== */
 function closeOrderModal() {
   document.getElementById('orderModal').classList.add('hidden');
   currentOrder = null;
+}
+
+function closeModalOnClick(event) {
+  if (event.target.id === 'orderModal') {
+    closeOrderModal();
+  }
 }
 </script>
 
