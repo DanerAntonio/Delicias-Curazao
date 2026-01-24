@@ -284,73 +284,96 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ========================================
-   CARGAR CONFIGURACIÓN DESDE SHEETS
+   CARGAR CONFIGURACIÓN DESDE SHEETS (JSONP)
    ======================================== */
-async function loadConfig() {
-  try {
-    const response = await fetch(`${API_URL}?action=getConfig`);
-    const config = await response.json();
+function loadConfig() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'configCallback_' + Date.now();
     
-    if (config.error) {
-      console.error('Error cargando config:', config.error);
-      return;
-    }
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      
+      if (data.error) {
+        console.error('Error cargando config:', data.error);
+        resolve();
+        return;
+      }
+      
+      // Actualizar configuración
+      if (data.Teléfono_Negocio) CONFIG.businessPhone = data.Teléfono_Negocio;
+      if (data.Teléfono_Domiciliario) CONFIG.deliveryPhone = data.Teléfono_Domiciliario;
+      if (data.Domicilio_Curazao !== undefined) CONFIG.deliveryFeeCurazao = Number(data.Domicilio_Curazao);
+      if (data.Domicilio_Otras !== undefined) CONFIG.deliveryFeeOtras = Number(data.Domicilio_Otras);
+      if (data.Pedido_Mínimo !== undefined) CONFIG.minOrder = Number(data.Pedido_Mínimo);
+      
+      // Actualizar UI
+      const phoneLink = document.getElementById('businessPhone');
+      if (phoneLink && CONFIG.businessPhone) {
+        phoneLink.href = `https://wa.me/${CONFIG.businessPhone}`;
+        phoneLink.innerHTML = `📞 ${CONFIG.businessPhone.slice(2)}`;
+      }
+      
+      const banner = document.getElementById('promoBanner');
+      if (banner && data.Banner_Promo) {
+        banner.textContent = data.Banner_Promo;
+      }
+      
+      resolve();
+    };
     
-    // Actualizar configuración
-    if (config.Teléfono_Negocio) CONFIG.businessPhone = config.Teléfono_Negocio;
-    if (config.Teléfono_Domiciliario) CONFIG.deliveryPhone = config.Teléfono_Domiciliario;
-    if (config.Domicilio_Curazao !== undefined) CONFIG.deliveryFeeCurazao = Number(config.Domicilio_Curazao);
-    if (config.Domicilio_Otras !== undefined) CONFIG.deliveryFeeOtras = Number(config.Domicilio_Otras);
-    if (config.Pedido_Mínimo !== undefined) CONFIG.minOrder = Number(config.Pedido_Mínimo);
-    
-    // Actualizar UI
-    const phoneLink = document.getElementById('businessPhone');
-    if (phoneLink && CONFIG.businessPhone) {
-      phoneLink.href = `https://wa.me/${CONFIG.businessPhone}`;
-      phoneLink.innerHTML = `📞 ${CONFIG.businessPhone.slice(2)}`;
-    }
-    
-    const banner = document.getElementById('promoBanner');
-    if (banner && config.Banner_Promo) {
-      banner.textContent = config.Banner_Promo;
-    }
-    
-  } catch (error) {
-    console.error('Error al cargar configuración:', error);
-  }
+    const script = document.createElement('script');
+    script.src = `${API_URL}?action=getConfig&callback=${callbackName}`;
+    script.onerror = () => {
+      delete window[callbackName];
+      console.error('Error al cargar configuración');
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
 }
 
 /* ========================================
-   CARGAR PRODUCTOS DESDE SHEETS
+   CARGAR PRODUCTOS DESDE SHEETS (JSONP)
    ======================================== */
-async function loadProducts() {
-  try {
-    const response = await fetch(`${API_URL}?action=getProducts`);
-    const products = await response.json();
+function loadProducts() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'productsCallback_' + Date.now();
     
-    if (products.error) {
-      console.error('Error cargando productos:', products.error);
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      
+      if (data.error) {
+        console.error('Error cargando productos:', data.error);
+        document.getElementById('menuContainer').innerHTML = `
+          <div class="text-center py-12">
+            <p class="text-red-500 mb-4">⚠️ Error al cargar el menú</p>
+            <p class="text-gray-500 text-sm">${data.error}</p>
+          </div>
+        `;
+        resolve();
+        return;
+      }
+      
+      PRODUCTS = data;
+      console.log('Productos cargados:', PRODUCTS.length);
+      resolve();
+    };
+    
+    const script = document.createElement('script');
+    script.src = `${API_URL}?action=getProducts&callback=${callbackName}`;
+    script.onerror = () => {
+      delete window[callbackName];
+      console.error('Error al cargar productos');
       document.getElementById('menuContainer').innerHTML = `
         <div class="text-center py-12">
-          <p class="text-red-500 mb-4">⚠️ Error al cargar el menú</p>
-          <p class="text-gray-500 text-sm">${products.error}</p>
+          <p class="text-red-500 mb-4">⚠️ Error de conexión</p>
+          <p class="text-gray-500 text-sm">No se pudo conectar con Google Sheets</p>
         </div>
       `;
-      return;
-    }
-    
-    PRODUCTS = products;
-    console.log('Productos cargados:', PRODUCTS.length);
-    
-  } catch (error) {
-    console.error('Error al cargar productos:', error);
-    document.getElementById('menuContainer').innerHTML = `
-      <div class="text-center py-12">
-        <p class="text-red-500 mb-4">⚠️ Error de conexión</p>
-        <p class="text-gray-500 text-sm">No se pudo conectar con Google Sheets</p>
-      </div>
-    `;
-  }
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
 }
 
 /* ========================================
@@ -663,7 +686,7 @@ async function sendOrder() {
   btn.innerHTML = '<div class="loading"></div> Enviando...';
   
   try {
-    // 1. GUARDAR EN GOOGLE SHEETS
+    // 1. GUARDAR EN GOOGLE SHEETS (usando JSONP para POST)
     const orderData = {
       cliente: name,
       telefono: phone,
@@ -674,18 +697,34 @@ async function sendOrder() {
       total: total
     };
     
-    const response = await fetch(`${API_URL}?action=newOrder`, {
-      method: 'POST',
-      body: JSON.stringify(orderData)
-    });
+    // Crear iframe oculto para el POST
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'postFrame';
+    document.body.appendChild(iframe);
     
-    const result = await response.json();
+    const form = document.createElement('form');
+    form.target = 'postFrame';
+    form.method = 'POST';
+    form.action = `${API_URL}?action=newOrder`;
     
-    if (!result.success) {
-      throw new Error(result.error || 'Error al guardar el pedido');
-    }
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = JSON.stringify(orderData);
+    form.appendChild(input);
     
-    const orderId = result.id;
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Limpiar
+    setTimeout(() => {
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+    }, 1000);
+    
+    // Generar ID local (ya que no podemos esperar respuesta del servidor)
+    const orderId = 'PED' + Date.now().toString().slice(-6);
     
     // 2. ENVIAR POR WHATSAPP
     const locationNames = {
