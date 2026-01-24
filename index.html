@@ -1,52 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Delicias Rápidas Curazao</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-orange-50">
-
-<!-- HEADER -->
-<header class="bg-white shadow sticky top-0 z-40">
-  <div class="p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-orange-600">🍔 Delicias Rápidas Curazao</h1>
-    <button onclick="toggleCart()" class="relative bg-orange-500 text-white p-3 rounded-full">
-      🛒
-      <span id="cartCount"
-        class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-2 text-xs">0</span>
-    </button>
-  </div>
-</header>
-
-<!-- CATEGORÍAS -->
-<div class="bg-white shadow p-3 flex gap-2 overflow-x-auto" id="categories"></div>
-
-<!-- PRODUCTOS -->
-<main class="p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="menu"></main>
-
-<!-- CARRITO -->
-<div id="cart" class="fixed inset-0 bg-black bg-opacity-50 hidden">
-  <div class="absolute right-0 top-0 bg-white w-full md:w-96 h-full p-4 overflow-y-auto">
-    <h2 class="text-xl font-bold mb-4">🛒 Tu pedido</h2>
-    <div id="cartItems"></div>
-
-    <div class="mt-4 border-t pt-4">
-      <p>Subtotal: <strong id="subtotal">$0</strong></p>
-      <p>Total: <strong id="total">$0</strong></p>
-
-      <button onclick="sendToWhatsApp()"
-        class="mt-4 w-full bg-green-500 text-white py-3 rounded font-bold">
-        Enviar por WhatsApp
-      </button>
-    </div>
-
-    <button onclick="toggleCart()" class="mt-4 text-red-500">Cerrar</button>
-  </div>
-</div>
-
 <script>
 /* ================= CONFIG ================= */
 const SCRIPT_URL =
@@ -62,7 +13,7 @@ let categorySelected = "Todos";
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", loadProducts);
 
-/* ================= SHEET ================= */
+/* ================= PRODUCTOS ================= */
 async function loadProducts() {
   try {
     const res = await fetch(`${SCRIPT_URL}?action=getProducts`);
@@ -78,11 +29,11 @@ async function loadProducts() {
 /* ================= UI ================= */
 function renderCategories() {
   const cats = ["Todos", ...new Set(PRODUCTS.map(p => p.category))];
-  document.getElementById("categories").innerHTML = cats.map(c => `
+  categories.innerHTML = cats.map(c => `
     <button onclick="filterCategory('${c}')"
-      class="px-4 py-2 rounded-full ${c === categorySelected
-        ? 'bg-orange-500 text-white'
-        : 'bg-gray-200'}">
+      class="px-4 py-2 rounded-full ${
+        c === categorySelected ? "bg-orange-500 text-white" : "bg-gray-200"
+      }">
       ${c}
     </button>
   `).join("");
@@ -99,7 +50,7 @@ function renderMenu() {
     ? PRODUCTS
     : PRODUCTS.filter(p => p.category === categorySelected);
 
-  document.getElementById("menu").innerHTML = list.map(p => `
+  menu.innerHTML = list.map(p => `
     <div class="bg-white rounded shadow">
       <img src="${p.image}" class="h-40 w-full object-cover">
       <div class="p-4">
@@ -117,19 +68,17 @@ function renderMenu() {
   `).join("");
 }
 
-/* ================= CART ================= */
+/* ================= CARRITO ================= */
 function addToCart(id) {
   const p = PRODUCTS.find(x => x.id == id);
   const item = cart.find(i => i.id == id);
-  item ? item.qty++ : cart.push({...p, qty:1});
+  item ? item.qty++ : cart.push({ id:p.id, name:p.name, price:p.price, qty:1 });
   updateCart();
 }
 
 function updateCart() {
-  const items = document.getElementById("cartItems");
   let total = 0;
-
-  items.innerHTML = cart.map(i => {
+  cartItems.innerHTML = cart.map(i => {
     total += i.price * i.qty;
     return `
       <div class="flex justify-between border-b py-2">
@@ -139,33 +88,55 @@ function updateCart() {
     `;
   }).join("");
 
-  document.getElementById("subtotal").innerText = `$${total.toLocaleString()}`;
-  document.getElementById("total").innerText = `$${total.toLocaleString()}`;
-  document.getElementById("cartCount").innerText = cart.reduce((s,i)=>s+i.qty,0);
-  document.getElementById("cartCount").classList.toggle("hidden", cart.length===0);
+  subtotal.innerText = `$${total.toLocaleString()}`;
+  totalSpan.innerText = `$${total.toLocaleString()}`;
+  cartCount.innerText = cart.reduce((s,i)=>s+i.qty,0);
+  cartCount.classList.toggle("hidden", cart.length===0);
 }
 
 function toggleCart() {
-  document.getElementById("cart").classList.toggle("hidden");
+  cart.classList.toggle("hidden");
 }
 
-/* ================= WHATSAPP ================= */
-function sendToWhatsApp() {
+/* ================= GUARDAR PEDIDO ================= */
+async function sendToWhatsApp() {
   if (!cart.length) return alert("Carrito vacío");
 
-  let msg = "🛒 *Nuevo Pedido*%0A%0A";
-  let total = 0;
+  const cliente = prompt("Tu nombre:");
+  const telefono = prompt("Tu teléfono:");
+  const direccion = prompt("Dirección de entrega:");
 
-  cart.forEach(i=>{
-    msg += `${i.qty}x ${i.name} - $${(i.price*i.qty).toLocaleString()}%0A`;
-    total += i.price*i.qty;
+  if (!cliente || !telefono || !direccion) {
+    return alert("❌ Datos incompletos");
+  }
+
+  const subtotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
+
+  // 🔴 GUARDAR EN SHEET
+  await fetch(`${SCRIPT_URL}?action=newOrder`, {
+    method: "POST",
+    body: JSON.stringify({
+      cliente,
+      telefono,
+      direccion,
+      productos: cart,     // 🔑 ARRAY REAL
+      subtotal,
+      domicilio: 0,
+      total: subtotal
+    })
   });
 
-  msg += `%0A*TOTAL: $${total.toLocaleString()}*`;
+  // 🟢 ENVIAR A WHATSAPP
+  let msg = "🛒 *Nuevo Pedido*%0A%0A";
+  cart.forEach(i=>{
+    msg += `${i.qty}x ${i.name} - $${(i.price*i.qty).toLocaleString()}%0A`;
+  });
+  msg += `%0A*TOTAL: $${subtotal.toLocaleString()}*`;
 
   window.open(`https://wa.me/${WHATSAPP}?text=${msg}`);
+
+  cart = [];
+  updateCart();
+  toggleCart();
 }
 </script>
-
-</body>
-</html>

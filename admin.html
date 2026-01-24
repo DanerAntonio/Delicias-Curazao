@@ -29,14 +29,14 @@
 
 <!-- PANEL -->
 <div id="panel" class="hidden max-w-6xl mx-auto p-4">
-
   <h2 class="text-2xl font-bold mb-4">📋 Pedidos</h2>
 
-  <div class="flex gap-2 mb-4">
+  <div class="flex gap-2 mb-4 flex-wrap">
     <button onclick="filterStatus('ALL')" class="px-3 py-1 bg-gray-300 rounded">Todos</button>
-    <button onclick="filterStatus('PENDING')" class="px-3 py-1 bg-yellow-400 rounded">Pendientes</button>
-    <button onclick="filterStatus('ACCEPTED')" class="px-3 py-1 bg-blue-400 rounded">Aceptados</button>
-    <button onclick="filterStatus('DELIVERED')" class="px-3 py-1 bg-green-400 rounded">Entregados</button>
+    <button onclick="filterStatus('NUEVO')" class="px-3 py-1 bg-yellow-400 rounded">Nuevos</button>
+    <button onclick="filterStatus('ACEPTADO')" class="px-3 py-1 bg-blue-400 rounded">Aceptados</button>
+    <button onclick="filterStatus('EN_CAMINO')" class="px-3 py-1 bg-orange-400 rounded">En camino</button>
+    <button onclick="filterStatus('ENTREGADO')" class="px-3 py-1 bg-green-400 rounded">Entregados</button>
   </div>
 
   <div id="orders" class="space-y-3"></div>
@@ -44,7 +44,9 @@
 
 <script>
 /******** CONFIG ********/
-const API_URL = "https://script.google.com/macros/s/AKfycbzz2MALrSrpNMlTGlDWRbrEIYvdNSXuto1nYSd6XQ-6R_c2cxyu3c3zeE-_ecQVmNokiw/exec";
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzRgJ1HNHMVOfjHk-i9PLFtRLfjtzSfQ-LdCvzfLoJJ8niMIO7ULW1tImbTz1K2DrY1ZQ/exec";
+
 const ADMIN_PASSWORD = "admin123";
 
 let ORDERS = [];
@@ -65,15 +67,10 @@ function logout() {
   location.reload();
 }
 
-/******** LOAD ORDERS (JSONP) ********/
-function loadOrders() {
-  const s = document.createElement("script");
-  s.src = API_URL + "?action=getOrders&callback=onOrdersLoaded";
-  document.body.appendChild(s);
-}
-
-function onOrdersLoaded(data) {
-  ORDERS = data.reverse();
+/******** LOAD PEDIDOS ********/
+async function loadOrders() {
+  const res = await fetch(API_URL + "?action=getPedidos");
+  ORDERS = (await res.json()).reverse();
   renderOrders();
 }
 
@@ -87,36 +84,41 @@ function filterStatus(status) {
 function renderOrders() {
   const list = CURRENT_FILTER === "ALL"
     ? ORDERS
-    : ORDERS.filter(o => o.status === CURRENT_FILTER);
+    : ORDERS.filter(o => o.estado === CURRENT_FILTER);
 
   orders.innerHTML = list.map(o => `
-    <div class="bg-white p-4 rounded shadow border-l-4 ${statusColor(o.status)}">
+    <div class="bg-white p-4 rounded shadow border-l-4 ${statusColor(o.estado)}">
       <div class="flex justify-between">
         <div>
-          <h3 class="font-bold">${o.orderId}</h3>
-          <p class="text-sm">${o.name} - ${o.phone}</p>
-          <p class="text-sm text-gray-600">${o.address}</p>
-          <p class="text-xs text-gray-400">${o.date}</p>
+          <h3 class="font-bold">${o.id}</h3>
+          <p class="text-sm">${o.cliente} - ${o.telefono}</p>
+          <p class="text-sm text-gray-600">${o.direccion}</p>
+          <p class="text-xs text-gray-400">${new Date(o.fecha).toLocaleString()}</p>
         </div>
         <div class="text-right">
-          <p class="font-bold text-lg">$${o.total}</p>
-          <span class="text-xs px-2 py-1 rounded bg-gray-200">${o.status}</span>
+          <p class="font-bold text-lg">$${Number(o.total).toLocaleString()}</p>
+          <span class="text-xs px-2 py-1 rounded bg-gray-200">${o.estado}</span>
         </div>
       </div>
 
-      <p class="mt-2 text-sm"><b>Pedido:</b> ${o.items}</p>
+      <div class="mt-2 text-sm">
+        <b>Pedido:</b>
+        <ul class="list-disc ml-5">
+          ${o.productos.map(p => `<li>${p.qty}x ${p.name}</li>`).join("")}
+        </ul>
+      </div>
 
-      <div class="flex gap-2 mt-3">
-        ${o.status === "PENDING" ? `
-          <button onclick="updateStatus('${o.orderId}','ACCEPTED')"
+      <div class="flex gap-2 mt-3 flex-wrap">
+        ${o.estado === "NUEVO" ? `
+          <button onclick="updateStatus('${o.id}','ACEPTADO')"
             class="bg-blue-500 text-white px-3 py-1 rounded">Aceptar</button>
         ` : ""}
-        ${o.status === "ACCEPTED" ? `
-          <button onclick="updateStatus('${o.orderId}','IN_DELIVERY')"
+        ${o.estado === "ACEPTADO" ? `
+          <button onclick="updateStatus('${o.id}','EN_CAMINO')"
             class="bg-orange-500 text-white px-3 py-1 rounded">Enviar</button>
         ` : ""}
-        ${o.status === "IN_DELIVERY" ? `
-          <button onclick="updateStatus('${o.orderId}','DELIVERED')"
+        ${o.estado === "EN_CAMINO" ? `
+          <button onclick="updateStatus('${o.id}','ENTREGADO')"
             class="bg-green-500 text-white px-3 py-1 rounded">Entregado</button>
         ` : ""}
       </div>
@@ -126,21 +128,20 @@ function renderOrders() {
 
 /******** STATUS ********/
 function statusColor(status) {
-  if (status === "PENDING") return "border-yellow-400";
-  if (status === "ACCEPTED") return "border-blue-400";
-  if (status === "IN_DELIVERY") return "border-orange-400";
-  if (status === "DELIVERED") return "border-green-400";
-  return "border-gray-300";
+  return {
+    NUEVO: "border-yellow-400",
+    ACEPTADO: "border-blue-400",
+    EN_CAMINO: "border-orange-400",
+    ENTREGADO: "border-green-400"
+  }[status] || "border-gray-300";
 }
 
-function updateStatus(id, status) {
-  fetch(API_URL +
-    "?action=updateOrderStatus" +
-    "&id=" + id +
-    "&status=" + status
-  ).then(() => {
-    loadOrders();
-  });
+/******** UPDATE ********/
+function updateStatus(id, estado) {
+  fetch(API_URL + "?action=updateOrder", {
+    method: "POST",
+    body: JSON.stringify({ id, estado })
+  }).then(loadOrders);
 }
 </script>
 
