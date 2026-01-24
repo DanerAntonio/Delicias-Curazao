@@ -15,28 +15,34 @@
 
 <body class="bg-orange-50 min-h-screen">
 
+<!-- HEADER -->
 <header class="bg-white shadow sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold text-orange-600">🍔 Delicias Caseras</h1>
     <button onclick="toggleCart()" class="bg-orange-500 text-white px-4 py-2 rounded">
-      🛒 <span id="cartCount" class="ml-1">0</span>
+      🛒 <span id="cartCount">0</span>
     </button>
   </div>
 </header>
 
 <!-- CATEGORÍAS -->
 <div class="bg-white shadow-sm sticky top-[72px] z-30">
-  <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide" id="categories"></div>
+  <div id="categories"
+    class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
+  </div>
 </div>
 
 <!-- PRODUCTOS -->
-<main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="menuContainer"></main>
+<main id="menuContainer"
+  class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+</main>
 
 <!-- CARRITO -->
 <div id="cartSidebar" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
   <div class="absolute right-0 top-0 h-full w-full md:w-96 bg-white p-6 overflow-y-auto">
     <h2 class="text-xl font-bold mb-4">🛒 Tu Pedido</h2>
-    <div id="cartItems"></div>
+
+    <div id="cartItems" class="space-y-2"></div>
 
     <hr class="my-4">
 
@@ -44,13 +50,17 @@
     <input id="phone" placeholder="Teléfono" class="w-full border p-2 mb-2">
     <input id="address" placeholder="Dirección" class="w-full border p-2 mb-2">
 
-    <div class="font-bold mt-2">Total: $<span id="total">0</span></div>
+    <div class="font-bold mt-2">
+      Total: $<span id="total">0</span>
+    </div>
 
-    <button onclick="sendOrder()" class="w-full bg-green-500 text-white py-3 mt-4 rounded">
+    <button onclick="sendOrder()"
+      class="w-full bg-green-500 text-white py-3 mt-4 rounded">
       Enviar Pedido
     </button>
 
-    <button onclick="toggleCart()" class="w-full bg-gray-300 py-2 mt-2 rounded">
+    <button onclick="toggleCart()"
+      class="w-full bg-gray-300 py-2 mt-2 rounded">
       Cerrar
     </button>
   </div>
@@ -65,28 +75,28 @@ let cart = [];
 let categorySelected = "Todos";
 
 /* ================= INIT ================= */
-document.addEventListener("DOMContentLoaded", () => {
-  loadProducts();
-});
+document.addEventListener("DOMContentLoaded", loadProducts);
 
 /* ================= LOAD PRODUCTS ================= */
-function loadProducts() {
-  fetch(`${API_URL}?action=getProducts`)
-    .then(res => res.json())
-    .then(data => {
-      PRODUCTS = data;
-      renderCategories();
-      renderProducts();
-    })
-    .catch(err => alert("Error cargando productos"));
+async function loadProducts() {
+  try {
+    const res = await fetch(API_URL + "?action=getProducts");
+    PRODUCTS = await res.json();
+    renderCategories();
+    renderProducts();
+  } catch (e) {
+    alert("❌ Error cargando productos");
+    console.error(e);
+  }
 }
 
 /* ================= CATEGORIES ================= */
 function renderCategories() {
-  const categories = ["Todos", ...new Set(PRODUCTS.map(p => p.category))];
-  document.getElementById("categories").innerHTML = categories.map(c => `
-    <button onclick="selectCategory('${c}')" 
-      class="px-4 py-2 rounded-full ${c === categorySelected ? 'bg-orange-500 text-white' : 'bg-gray-200'}">
+  const cats = ["Todos", ...new Set(PRODUCTS.map(p => p.category))];
+  document.getElementById("categories").innerHTML = cats.map(c => `
+    <button onclick="selectCategory('${c}')"
+      class="px-4 py-2 rounded-full whitespace-nowrap
+      ${c === categorySelected ? 'bg-orange-500 text-white' : 'bg-gray-200'}">
       ${c}
     </button>
   `).join("");
@@ -106,12 +116,24 @@ function renderProducts() {
 
   document.getElementById("menuContainer").innerHTML = list.map(p => `
     <div class="bg-white rounded shadow p-4">
-      <img src="${p.image}" class="h-40 w-full object-cover rounded">
+      <img src="${p.image}"
+        class="h-40 w-full object-cover rounded"
+        onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
+
       <h3 class="font-bold mt-2">${p.name}</h3>
       <p class="text-sm text-gray-600">${p.description}</p>
+
+      ${p.oldPrice ? `
+        <div class="text-sm text-gray-400 line-through">
+          $${p.oldPrice}
+        </div>` : ""}
+
       <div class="flex justify-between items-center mt-2">
-        <span class="font-bold text-orange-600">$${p.price}</span>
-        <button onclick="addToCart('${p.id}')" class="bg-orange-500 text-white px-3 py-1 rounded">
+        <span class="font-bold text-orange-600">
+          $${p.price}
+        </span>
+        <button onclick="addToCart(${p.id})"
+          class="bg-orange-500 text-white px-3 py-1 rounded">
           Agregar
         </button>
       </div>
@@ -123,8 +145,10 @@ function renderProducts() {
 function addToCart(id) {
   const product = PRODUCTS.find(p => p.id == id);
   const item = cart.find(i => i.id == id);
+
   if (item) item.qty++;
   else cart.push({ ...product, qty: 1 });
+
   updateCart();
 }
 
@@ -148,7 +172,12 @@ function toggleCart() {
 }
 
 /* ================= SEND ORDER ================= */
-function sendOrder() {
+async function sendOrder() {
+  if (!name.value || !phone.value || !address.value || cart.length === 0) {
+    alert("⚠️ Completa todos los datos y agrega productos");
+    return;
+  }
+
   const payload = {
     nombre: name.value,
     telefono: phone.value,
@@ -159,17 +188,20 @@ function sendOrder() {
     total: cart.reduce((s, i) => s + i.price * i.qty, 0)
   };
 
-  fetch(`${API_URL}?action=newOrder`, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  })
-  .then(r => r.json())
-  .then(() => {
-    alert("Pedido enviado ✅");
+  try {
+    await fetch(API_URL + "?action=newOrder", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    alert("✅ Pedido enviado");
     cart = [];
     updateCart();
     toggleCart();
-  });
+  } catch (e) {
+    alert("❌ Error enviando pedido");
+    console.error(e);
+  }
 }
 </script>
 
