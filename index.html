@@ -348,9 +348,11 @@ const COUPONS = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadProductsFromSheet(); // Cargar desde Google Sheets
+  renderCategories();
+  renderMenu();
   updateCart();
 });
+
 
 function renderCategories() {
   const categories = ["Todos", ...new Set(PRODUCTS.map(p => p.category))];
