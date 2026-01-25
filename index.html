@@ -3,126 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delicias Rapidas Curazao | Pedidos Online</title>
+  <title>Delicias Rápidas Curazao | Pedidos WhatsApp</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <style>
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    @keyframes slideIn {
-      from { transform: translateX(100%); }
-      to { transform: translateX(0); }
-    }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     .slide-in { animation: slideIn 0.3s ease-out; }
-    
-    .cart-badge { animation: pulse 2s infinite; }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-    }
-
-    .modal-overlay {
-      backdrop-filter: blur(4px);
-    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .cart-badge { animation: pulse 0.5s; }
+    .modal-overlay { backdrop-filter: blur(4px); }
   </style> 
 </head>
-
 <body class="bg-gradient-to-br from-orange-50 to-yellow-50 min-h-screen">
 
-
-<!-- HEADER -->
 <header class="bg-white shadow-md sticky top-0 z-40">
-  <!-- BANNER DE PROMOCIÓN -->
   <div class="bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-2 text-sm font-semibold">
-    🎉 ¡Domicilio GRATIS en Curazao! | 🔥 Ofertas especiales este fin de semana
+    🎉 ¡Domicilio GRATIS en Curazao! | 🔥 Pedidos por WhatsApp
   </div>
-  
   <div class="max-w-7xl mx-auto px-4 py-4">
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-orange-600">🍔 Delicias Rapidas Curazao</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-orange-600">🍔 Delicias Rápidas Curazao</h1>
         <div class="flex flex-wrap gap-3 mt-2 text-xs md:text-sm text-gray-600">
           <span>⏰ Vie-Sáb-Dom: 11AM-10PM</span>
-          <span>📍 Unidad Residencial Curazao, Bello</span>
-          <a href="https://wa.me/573027012881" target="_blank" 
-             class="flex items-center gap-1 text-green-600 hover:text-green-700 font-semibold hover:underline transition">
-            📞 302 701 2881
-          </a>
+          <span>📍 Unidad Curazao, Bello</span>
+          <a href="https://wa.me/573027012881" target="_blank" class="text-green-600 hover:text-green-700 font-semibold">📞 302 701 2881</a>
         </div>
       </div>
-      
       <button onclick="toggleCart()" class="relative bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600 transition-all hover:scale-110">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
         </svg>
-        <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold cart-badge">0</span>
+        <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">0</span>
       </button>
     </div>
   </div>
 </header>
 
-<!-- CATEGORÍAS -->
 <div class="bg-white shadow-sm sticky top-[88px] md:top-[92px] z-30">
   <div class="max-w-7xl mx-auto px-4 py-3">
     <div class="flex gap-2 overflow-x-auto scrollbar-hide" id="categories"></div>
   </div>
 </div>
 
-<!-- MENÚ -->
 <main class="max-w-7xl mx-auto px-4 py-8">
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="menuContainer"></div>
 </main>
 
-<!-- MODAL PARA JUGOS -->
-<div id="juiceModal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] hidden modal-overlay flex items-center justify-center p-4">
+<div id="juiceModal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] hidden modal-overlay items-center justify-center p-4">
   <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
     <h3 class="text-2xl font-bold text-gray-800 mb-4">🥤 Personaliza tu Jugo</h3>
-    
     <div class="mb-4">
       <label class="block text-sm font-semibold text-gray-700 mb-2">Sabor:</label>
       <select id="juiceFlavor" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
-        <option value="Tomate de arbol">Tomate de arbol</option>
+        <option value="Tomate de Árbol">Tomate de Árbol</option>
         <option value="Mora">Mora</option>
         <option value="Lulo">Lulo</option>
         <option value="Mango">Mango</option>
         <option value="Maracuyá">Maracuyá</option>
         <option value="Guanábana">Guanábana</option>
+        <option value="Fresa">Fresa</option>
       </select>
     </div>
-
     <div class="mb-6">
       <label class="block text-sm font-semibold text-gray-700 mb-2">Preparación:</label>
       <div class="grid grid-cols-2 gap-3">
-        <button onclick="selectJuiceType('agua')" id="btnAgua" 
-          class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 transition">
+        <button onclick="selectJuiceType('agua')" id="btnAgua" class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 transition">
           <div class="text-2xl mb-1">💧</div>
           <div class="font-semibold">En Agua</div>
           <div class="text-sm text-gray-600">$5,000</div>
         </button>
-        <button onclick="selectJuiceType('leche')" id="btnLeche" 
-          class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 transition">
+        <button onclick="selectJuiceType('leche')" id="btnLeche" class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 transition">
           <div class="text-2xl mb-1">🥛</div>
           <div class="font-semibold">En Leche</div>
           <div class="text-sm text-gray-600">$7,000</div>
         </button>
       </div>
     </div>
-
     <div class="flex gap-3">
-      <button onclick="closeJuiceModal()" 
-        class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-300 transition">
-        Cancelar
-      </button>
-      <button onclick="addJuiceToCart()" 
-        class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition">
-        Agregar
-      </button>
+      <button onclick="closeJuiceModal()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-300 transition">Cancelar</button>
+      <button onclick="addJuiceToCart()" class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition">Agregar</button>
     </div>
   </div>
 </div>
 
-<!-- CARRITO -->
 <div id="cartSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="closeCartOnOverlay(event)">
   <div class="absolute right-0 top-0 h-full w-full md:w-96 bg-white shadow-2xl overflow-y-auto slide-in" onclick="event.stopPropagation()">
     <div class="p-6">
@@ -130,39 +95,29 @@
         <h2 class="text-2xl font-bold text-gray-800">🛒 Tu Pedido</h2>
         <button onclick="toggleCart()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
       </div>
-
       <div id="cartItems" class="space-y-4 mb-6"></div>
-
       <div id="customerForm" class="hidden">
         <div class="space-y-3 mb-6">
-          <input type="text" id="customerName" placeholder="Nombre completo *" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-          
-          <input type="tel" id="customerPhone" placeholder="Teléfono *" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-          
-          <!-- SELECTOR DE UBICACIÓN -->
+          <input type="text" id="customerName" placeholder="Nombre completo *" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+          <input type="tel" id="customerPhone" placeholder="Teléfono *" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación de entrega *</label>
-            <select id="deliveryLocation" onchange="updateDeliveryFee()" 
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            <select id="deliveryLocation" onchange="updateDeliveryFee()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
               <option value="">Selecciona ubicación</option>
-              <option value="curazao">Unidad Curazao (Domicilio GRATIS)</option>
+              <option value="curazao">Unidad Curazao (GRATIS)</option>
               <option value="Toledo">Unidad Toledo (+$3,000)</option>
-              <option value="Tierralinda 1">Unidad Tierralinda 1 (+$3,000)</option>
-              <option value="Tierralinda 2">Unidad Tierralinda 2 (+$3,000)</option>
-              <option value="La Vida es Bella 1">Unidad La Vida es Bella 1 (+$3,000)</option>
-              <option value="La Vida es Bella 2">Unidad La Vida es Bella 2 (+$3,000)</option>
-              <option value="Madera Esencial">Unidad Madera Esencial (+$4,000)</option>
-              <option value="Madera Natural">Unidad Madera Natural (+$4,000)</option>
-              <option value="Madera Fina">Unidad Madera Fina (+$4,000)</option>
-              <option value="Madera Silvestre">Unidad Madera Silvestre (+$4,000)</option>
-              <option value="Puerta Madera">Unidad Puerta Madera (+$4,000)</option>
-              <option value="otras">Otras zonas de Bello (+$4,000)</option>
+              <option value="Tierralinda1">Tierralinda 1 (+$3,000)</option>
+              <option value="Tierralinda2">Tierralinda 2 (+$3,000)</option>
+              <option value="LaVidaEsBella1">La Vida es Bella 1 (+$3,000)</option>
+              <option value="LaVidaEsBella2">La Vida es Bella 2 (+$3,000)</option>
+              <option value="MaderaEsencial">Madera Esencial (+$4,000)</option>
+              <option value="MaderaNatural">Madera Natural (+$4,000)</option>
+              <option value="MaderaFina">Madera Fina (+$4,000)</option>
+              <option value="MaderaSilvestre">Madera Silvestre (+$4,000)</option>
+              <option value="PuertaMadera">Puerta Madera (+$4,000)</option>
+              <option value="otras">Otras zonas (+$5,000)</option>
             </select>
           </div>
-
-          <!-- SELECTOR DE TORRE/APTO (Solo para Curazao) -->
           <div id="curazaoDetails" class="hidden space-y-3">
             <select id="tower" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
               <option value="">Selecciona Torre</option>
@@ -170,30 +125,22 @@
               <option value="Torre 2">Torre 2</option>
               <option value="Torre 3">Torre 3</option>
               <option value="Torre 4">Torre 4</option>
-              <option value="Torre 4">Torre 5</option>
-              <option value="Torre 4">Torre 6</option>
-              <option value="Torre 4">Torre 7</option>
-              <option value="Torre 4">Torre 8</option>
-              <option value="Torre 4">Torre 9</option>
-              <option value="Torre 4">Torre 10</option>
-              <option value="Torre 4">Torre 11</option>
-              <option value="Torre 4">Torre 12</option>
+              <option value="Torre 5">Torre 5</option>
+              <option value="Torre 6">Torre 6</option>
+              <option value="Torre 7">Torre 7</option>
+              <option value="Torre 8">Torre 8</option>
+              <option value="Torre 9">Torre 9</option>
+              <option value="Torre 10">Torre 10</option>
+              <option value="Torre 11">Torre 11</option>
+              <option value="Torre 12">Torre 12</option>
             </select>
-            
-            <input type="text" id="apartment" placeholder="Número de apartamento (ej: 819)" 
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+            <input type="text" id="apartment" placeholder="Número de apartamento (ej: 819)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
           </div>
-
-          <!-- DIRECCIÓN MANUAL (Solo para otras zonas) -->
           <div id="otherAddress" class="hidden">
-            <input type="text" id="customerAddress" placeholder="Dirección completa de entrega *" 
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            <input type="text" id="customerAddress" placeholder="Dirección completa *" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
           </div>
-          
-          <textarea id="customerNotes" placeholder="Observaciones (opcional)" rows="3"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
+          <textarea id="customerNotes" placeholder="Observaciones (opcional)" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"></textarea>
         </div>
-
         <div class="border-t border-gray-200 pt-4 space-y-2">
           <div class="flex justify-between text-gray-700">
             <span>Subtotal:</span>
@@ -203,28 +150,19 @@
             <span>Domicilio:</span>
             <span id="deliveryAmount" class="font-semibold text-green-600">GRATIS</span>
           </div>
-          <div id="minOrderWarning" class="text-sm text-red-500 hidden">
-            Pedido mínimo: $5,000
-          </div>
+          <div id="minOrderWarning" class="text-sm text-red-500 hidden">⚠️ Pedido mínimo: $5,000</div>
           <div class="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t border-gray-200">
             <span>Total:</span>
             <span class="text-orange-600" id="totalAmount">$0</span>
           </div>
         </div>
-
-        <button onclick="sendToWhatsApp()" 
-          class="w-full bg-green-500 text-white py-4 rounded-lg font-bold hover:bg-green-600 transition-all hover:scale-105 flex items-center justify-center gap-2 mt-6">
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-          </svg>
-          Enviar Pedido
+        <button onclick="sendToWhatsApp()" class="w-full bg-green-500 text-white py-4 rounded-lg font-bold hover:bg-green-600 transition-all hover:scale-105 flex items-center justify-center gap-2 mt-6">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          Enviar por WhatsApp
         </button>
       </div>
-
       <div id="emptyCart" class="text-center py-12">
-        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
+        <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
         <p class="text-gray-500 text-lg">Tu carrito está vacío</p>
       </div>
     </div>
@@ -232,93 +170,42 @@
 </div>
 
 <script>
-/* ⚠️ CONFIGURACIÓN - CAMBIA ESTOS VALORES */
 const CONFIG = {
-  businessName: "Delicias Caseras",
-  businessPhone: "573027012881",      // Tu WhatsApp
-  deliveryPhone: "573112762618",      // WhatsApp del domiciliario
-  deliveryFeeCurazao: 0,              // GRATIS en Curazao
-  deliveryFeeOtras: 4000,             // $4,000 en otras zonas
+  businessPhone: "573027012881",
+  deliveryPhone: "573112762618",
   minOrder: 5000,
-  businessAddress: "Unidad Residencial Curazao, Torre 3, Apto 819, Bello, Antioquia"
+  businessAddress: "Unidad Residencial Curazao, Torre 3, Apto 819, Bello"
 };
 
-/* PRODUCTOS - AGREGA O MODIFICA AQUÍ */
 const PRODUCTS = [
-  {
-    id: 1,
-    category: "Pescados y Mariscos",
-    name: "Tilapia Frita",
-    description: "Tilapia frita con arroz, ensalada, patacones, aguacate y jugo del día",
-    price: 25000,
-    image: "image/TILAPIA.jpg"
-  },
-  {
-    id: 2,
-    category: "Hamburguesas",
-    name: "Hamburguesa Doble",
-    description: "Doble carne, queso cheddar, tocino y cebolla caramelizada",
-    price: 22000,
-    image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop"
-  },
-  {
-    id: 3,
-    category: "Hamburguesas",
-    name: "Hamburguesa Sencilla",
-    description: "Carne, queso, lechuga, tomate y salsas especiales",
-    price: 15000,
-    image: "image/hamburguesas.jpg"
-  },
-  {
-    id: 4,
-    category: "Bebidas Naturales",
-    name: "Jugo Natural",
-    description: "Elige sabor y preparación (agua o leche)",
-    price: 5000,
-    image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&h=300&fit=crop",
-    isJuice: true
-  },
-  {
-    id: 5,
-    category: "Waffles",
-    name: "Waffles Premium",
-    description: "Fresas, banano, crema batida y chocolate",
-    price: 15000,
-    image: "image/wafles.jpg"
-  },
-  {
-    id: 6,
-    category: "Sándwiches Cubanos",
-    name: "Sándwich Cubano",
-    description: "Pan cubano, jamón, queso, lechuga y tomate",
-    price: 25000,
-    image: "image/cubanos.jpg"
-  },
-  {
-    id: 7,
-    category: "Combos",
-    name: "Combo Pareja 💑",
-    description: "2 Hamburguesas + 2 Bebidas + Papas",
-    price: 35000,
-    oldPrice: 44000,
-    image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400&h=300&fit=crop",
-    badge: "Ahorra $9,000",
-    featured: true
-  },
-  {
-    id: 8,
-    category: "Hamburguesas",
-    name: "Hamburguesa Especial",
-    description: "Hamburguesa doble con extra queso y tocino",
-    price: 18000,
-    oldPrice: 22000,
-    image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop",
-    badge: "Oferta",
-    featured: true
-  }
+  {id: 1, category: "Hamburguesas", name: "Hamburguesa Sencilla", description: "Carne, queso, lechuga, tomate y salsas", price: 12000, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop"},
+  {id: 2, category: "Hamburguesas", name: "Hamburguesa Doble", description: "Doble carne, doble queso, tocino y salsas", price: 18000, image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop"},
+  {id: 3, category: "Hamburguesas", name: "Hamburguesa Especial", description: "Carne, queso, jamón, huevo, tocineta, piña", price: 20000, image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400&h=300&fit=crop"},
+  {id: 4, category: "Hamburguesas", name: "Hamburguesa de Pollo", description: "Pechuga apanada, queso, lechuga y salsas", price: 14000, image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=400&h=300&fit=crop"},
+  {id: 5, category: "Perros Calientes", name: "Perro Sencillo", description: "Salchicha, queso, salsas, ripio y papas", price: 8000, image: "https://images.unsplash.com/photo-1612392062422-ef19b42f74df?w=400&h=300&fit=crop"},
+  {id: 6, category: "Perros Calientes", name: "Perro Especial", description: "Salchicha, tocineta, queso, huevo, salsas", price: 12000, image: "https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=400&h=300&fit=crop"},
+  {id: 7, category: "Perros Calientes", name: "Perro Súper", description: "Salchicha ranchera, tocineta, queso, jamón", price: 15000, image: "https://images.unsplash.com/photo-1619894991209-e2fea5b0f1f6?w=400&h=300&fit=crop"},
+  {id: 8, category: "Salchipapas", name: "Salchipapa Sencilla", description: "Papas, salchicha y salsas", price: 10000, image: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=400&h=300&fit=crop"},
+  {id: 9, category: "Salchipapas", name: "Salchipapa Especial", description: "Papas, salchicha, tocineta, queso y maíz", price: 15000, image: "https://images.unsplash.com/photo-1630431341973-02e6dfeeeb34?w=400&h=300&fit=crop"},
+  {id: 10, category: "Chorizos", name: "Choripán", description: "Chorizo, papas chip, queso y salsas", price: 10000, image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop"},
+  {id: 11, category: "Chorizos", name: "Chuzo Mixto", description: "Carne, pollo, chorizo, papa y plátano", price: 13000, image: "https://images.unsplash.com/photo-1529042410759-befb1204b468?w=400&h=300&fit=crop"},
+  {id: 12, category: "Chorizos", name: "Chuzo Desgranado", description: "Mixto con queso, tocineta y salsas", price: 16000, image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop"},
+  {id: 13, category: "Alitas", name: "Alitas BBQ (8 und)", description: "8 alitas BBQ con papas y ensalada", price: 18000, image: "https://images.unsplash.com/photo-1608039829572-78524f79c4c7?w=400&h=300&fit=crop"},
+  {id: 14, category: "Alitas", name: "Nuggets (10 und)", description: "Nuggets con papas y salsas", price: 12000, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop"},
+  {id: 15, category: "Pizzas", name: "Pizza Personal", description: "Individual de jamón y queso", price: 10000, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop"},
+  {id: 16, category: "Pizzas", name: "Pizza Mediana", description: "4 porciones con ingredientes a elección", price: 20000, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop"},
+  {id: 17, category: "Arepas", name: "Arepa Rellena", description: "Con carne, pollo o mixta, queso", price: 9000, image: "https://images.unsplash.com/photo-1612392166886-ee8475b0a67d?w=400&h=300&fit=crop"},
+  {id: 18, category: "Arepas", name: "Patacón con Todo", description: "Carne, pollo, tocineta, queso, hogao", price: 15000, image: "https://images.unsplash.com/photo-1628191011227-10f5cd49f339?w=400&h=300&fit=crop"},
+  {id: 19, category: "Papas", name: "Papas Francesa", description: "Papas fritas con salsas", price: 6000, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop"},
+  {id: 20, category: "Papas", name: "Papas Gratinadas", description: "Con queso y tocineta", price: 10000, image: "https://images.unsplash.com/photo-1630431341973-02e6dfeeeb34?w=400&h=300&fit=crop"},
+  {id: 21, category: "Platos", name: "Bandeja Paisa Mini", description: "Frijoles, arroz, carne, chicharrón, huevo", price: 18000, image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=300&fit=crop"},
+  {id: 22, category: "Platos", name: "Tilapia Frita", description: "Con arroz, ensalada, patacones y jugo", price: 25000, image: "https://images.unsplash.com/photo-1580959375944-534a8ecfa47b?w=400&h=300&fit=crop"},
+  {id: 23, category: "Platos", name: "Pechuga Apanada", description: "Con arroz, papas y ensalada", price: 16000, image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=300&fit=crop"},
+  {id: 24, category: "Bebidas", name: "Jugo Natural", description: "Elige sabor y preparación", price: 5000, image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&h=300&fit=crop", isJuice: true},
+  {id: 25, category: "Bebidas", name: "Gaseosa", description: "Coca Cola, Sprite, Fanta", price: 3000, image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400&h=300&fit=crop"},
+  {id: 26, category: "Postres", name: "Waffles Premium", description: "Fresas, banano, crema y chocolate", price: 15000, image: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=400&h=300&fit=crop"},
+  {id: 27, category: "Postres", name: "Helado", description: "Vainilla, chocolate o fresa", price: 5000, image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop"}
 ];
-
-
 
 let cart = [];
 let selectedCategory = "Todos";
@@ -334,14 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderCategories() {
   const categories = ["Todos", ...new Set(PRODUCTS.map(p => p.category))];
   const container = document.getElementById('categories');
-  
   container.innerHTML = categories.map(cat => `
-    <button onclick="filterCategory('${cat}')" 
-      class="px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
-        selectedCategory === cat 
-          ? 'bg-orange-500 text-white' 
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }">
+    <button onclick="filterCategory('${cat}')" class="px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${selectedCategory === cat ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
       ${cat}
     </button>
   `).join('');
@@ -354,49 +235,20 @@ function filterCategory(category) {
 }
 
 function renderMenu() {
-  const filteredProducts = selectedCategory === "Todos" 
-    ? PRODUCTS 
-    : PRODUCTS.filter(p => p.category === selectedCategory);
-  
+  const filteredProducts = selectedCategory === "Todos" ? PRODUCTS : PRODUCTS.filter(p => p.category === selectedCategory);
   const container = document.getElementById('menuContainer');
-  
   container.innerHTML = filteredProducts.map(product => `
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 ${product.featured ? 'ring-2 ring-orange-400' : ''}">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
       <div class="relative">
-        <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover" 
-          onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'">
-        
-        ${product.badge ? `
-          <div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-            ${product.badge}
-          </div>
-        ` : ''}
-        
-        ${product.oldPrice ? `
-          <div class="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-            -${Math.round((1 - product.price / product.oldPrice) * 100)}% OFF
-          </div>
-        ` : ''}
+        <img src="${product.image}" alt="${product.name}" class="w-full h-48 object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop'">
       </div>
-      
       <div class="p-6">
         <h3 class="text-xl font-bold text-gray-800 mb-2">${product.name}</h3>
         <p class="text-gray-600 text-sm mb-4">${product.description}</p>
-        
         <div class="flex justify-between items-center">
-          <div>
-            ${product.oldPrice ? `
-              <div class="text-sm text-gray-400 line-through">$${product.oldPrice.toLocaleString()}</div>
-            ` : ''}
-            <span class="text-2xl font-bold text-orange-600">
-              ${product.isJuice ? 'Desde ' : ''}$${product.price.toLocaleString()}
-            </span>
-          </div>
-          <button onclick="${product.isJuice ? 'openJuiceModal()' : `addToCart(${product.id})`}" 
-            class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all hover:scale-105 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
+          <span class="text-2xl font-bold text-orange-600">${product.isJuice ? 'Desde ' : ''}$${product.price.toLocaleString()}</span>
+          <button onclick="${product.isJuice ? 'openJuiceModal()' : `addToCart(${product.id})`}" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-all hover:scale-105 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             ${product.isJuice ? 'Personalizar' : 'Agregar'}
           </button>
         </div>
@@ -405,7 +257,6 @@ function renderMenu() {
   `).join('');
 }
 
-/* MODAL JUGOS */
 function openJuiceModal() {
   document.getElementById('juiceModal').classList.remove('hidden');
   document.getElementById('juiceModal').classList.add('flex');
@@ -423,7 +274,6 @@ function selectJuiceType(type) {
   selectedJuiceType = type;
   document.getElementById('btnAgua').classList.remove('border-orange-500', 'bg-orange-50');
   document.getElementById('btnLeche').classList.remove('border-orange-500', 'bg-orange-50');
-  
   if (type === 'agua') {
     document.getElementById('btnAgua').classList.add('border-orange-500', 'bg-orange-50');
   } else {
@@ -436,11 +286,9 @@ function addJuiceToCart() {
     alert('⚠️ Por favor selecciona si quieres el jugo en agua o leche');
     return;
   }
-  
   const flavor = document.getElementById('juiceFlavor').value;
   const price = selectedJuiceType === 'agua' ? 5000 : 7000;
   const prep = selectedJuiceType === 'agua' ? 'en Agua' : 'en Leche';
-  
   const juiceProduct = {
     id: Date.now(),
     name: `Jugo de ${flavor} ${prep}`,
@@ -448,11 +296,9 @@ function addJuiceToCart() {
     image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&h=300&fit=crop",
     quantity: 1
   };
-  
   cart.push(juiceProduct);
   updateCart();
   closeJuiceModal();
-  
   const badge = document.getElementById('cartCount');
   badge.classList.remove('cart-badge');
   setTimeout(() => badge.classList.add('cart-badge'), 10);
@@ -461,15 +307,12 @@ function addJuiceToCart() {
 function addToCart(productId) {
   const product = PRODUCTS.find(p => p.id === productId);
   const existingItem = cart.find(item => item.id === productId);
-  
   if (existingItem) {
     existingItem.quantity++;
   } else {
     cart.push({ ...product, quantity: 1 });
   }
-  
   updateCart();
-  
   const badge = document.getElementById('cartCount');
   badge.classList.remove('cart-badge');
   setTimeout(() => badge.classList.add('cart-badge'), 10);
@@ -492,23 +335,12 @@ function updateDeliveryFee() {
   const location = document.getElementById('deliveryLocation').value;
   const curazaoDetails = document.getElementById('curazaoDetails');
   const otherAddress = document.getElementById('otherAddress');
-  
-  // Definir costos por ubicación
   const deliveryFees = {
-    'curazao': 0,
-    'Toledo': 3000,
-    'Tierra Linda 1': 3000,
-    'Tierralinda 2': 3000,
-    'La Vida es Bella 1': 3000,
-    'La Vida es Bella 2': 3000,
-    'Madera Esencial': 4000,
-    'Madera Natural': 4000,
-    'Madera Fina': 4000,
-    'Madera Silvestre': 4000,
-    'Puerta Madera ': 4000,
-    'otras': 5000
+    'curazao': 0, 'Toledo': 3000, 'Tierralinda1': 3000, 'Tierralinda2': 3000,
+    'LaVidaEsBella1': 3000, 'LaVidaEsBella2': 3000, 'MaderaEsencial': 4000,
+    'MaderaNatural': 4000, 'MaderaFina': 4000, 'MaderaSilvestre': 4000,
+    'PuertaMadera': 4000, 'otras': 5000
   };
-  
   if (location === 'curazao') {
     currentDeliveryFee = deliveryFees[location];
     curazaoDetails.classList.remove('hidden');
@@ -522,7 +354,6 @@ function updateDeliveryFee() {
     curazaoDetails.classList.add('hidden');
     otherAddress.classList.add('hidden');
   }
-  
   updateCart();
 }
 
@@ -531,72 +362,51 @@ function updateCart() {
   const emptyCart = document.getElementById('emptyCart');
   const customerForm = document.getElementById('customerForm');
   const cartCount = document.getElementById('cartCount');
-  
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  
   if (totalItems > 0) {
     cartCount.textContent = totalItems;
     cartCount.classList.remove('hidden');
   } else {
     cartCount.classList.add('hidden');
   }
-  
   if (cart.length === 0) {
     emptyCart.classList.remove('hidden');
     customerForm.classList.add('hidden');
     cartItemsContainer.innerHTML = '';
     return;
   }
-  
   emptyCart.classList.add('hidden');
   customerForm.classList.remove('hidden');
-  
   cartItemsContainer.innerHTML = cart.map(item => `
     <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
       <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded">
-      
       <div class="flex-1">
         <h4 class="font-semibold text-gray-800">${item.name}</h4>
-        <p class="text-orange-600 font-bold">$${item.price.toLocaleString()}</p>
+        <p class="text-orange-600 font-bold">${item.price.toLocaleString()}</p>
       </div>
-      
       <div class="flex items-center gap-2">
         <button onclick="updateQuantity(${item.id}, -1)" class="bg-gray-200 p-1 rounded hover:bg-gray-300">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-          </svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
         </button>
-        
         <span class="font-bold w-8 text-center">${item.quantity}</span>
-        
         <button onclick="updateQuantity(${item.id}, 1)" class="bg-gray-200 p-1 rounded hover:bg-gray-300">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
         </button>
-        
         <button onclick="removeFromCart(${item.id})" class="ml-2 text-red-500 hover:text-red-700">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
         </button>
       </div>
     </div>
   `).join('');
-  
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal + currentDeliveryFee;
-  
-  document.getElementById('subtotalAmount').textContent = `$${subtotal.toLocaleString()}`;
-  
+  document.getElementById('subtotalAmount').textContent = `${subtotal.toLocaleString()}`;
   if (currentDeliveryFee === 0) {
     document.getElementById('deliveryAmount').innerHTML = '<span class="text-green-600 font-bold">GRATIS</span>';
   } else {
-    document.getElementById('deliveryAmount').textContent = `$${currentDeliveryFee.toLocaleString()}`;
+    document.getElementById('deliveryAmount').textContent = `${currentDeliveryFee.toLocaleString()}`;
   }
-  
-  document.getElementById('totalAmount').textContent = `$${total.toLocaleString()}`;
-  
+  document.getElementById('totalAmount').textContent = `${total.toLocaleString()}`;
   const minOrderWarning = document.getElementById('minOrderWarning');
   if (subtotal < CONFIG.minOrder) {
     minOrderWarning.classList.remove('hidden');
@@ -620,138 +430,88 @@ function sendToWhatsApp() {
   const phone = document.getElementById('customerPhone').value.trim();
   const location = document.getElementById('deliveryLocation').value;
   const notes = document.getElementById('customerNotes').value.trim();
-  
   let address = '';
-  
-  // Validaciones
   if (!name || !phone || !location) {
     alert('⚠️ Por favor completa todos los campos obligatorios');
     return;
   }
-  
   if (location === 'curazao') {
     const tower = document.getElementById('tower').value;
     const apartment = document.getElementById('apartment').value.trim();
-    
     if (!tower || !apartment) {
       alert('⚠️ Por favor selecciona la torre y número de apartamento');
       return;
     }
-    
     address = `Unidad Curazao - ${tower}, Apto ${apartment}`;
   } else if (location === 'otras') {
     address = document.getElementById('customerAddress').value.trim();
-    
     if (!address) {
       alert('⚠️ Por favor ingresa la dirección de entrega');
       return;
     }
+  } else {
+    const locationNames = {
+      'Toledo': 'Unidad Toledo', 'Tierralinda1': 'Unidad Tierralinda 1',
+      'Tierralinda2': 'Unidad Tierralinda 2', 'LaVidaEsBella1': 'La Vida es Bella 1',
+      'LaVidaEsBella2': 'La Vida es Bella 2', 'MaderaEsencial': 'Madera Esencial',
+      'MaderaNatural': 'Madera Natural', 'MaderaFina': 'Madera Fina',
+      'MaderaSilvestre': 'Madera Silvestre', 'PuertaMadera': 'Puerta Madera'
+    };
+    address = locationNames[location] || location;
   }
-  
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  
   if (subtotal < CONFIG.minOrder) {
     alert(`⚠️ El pedido mínimo es de ${CONFIG.minOrder.toLocaleString()}`);
     return;
   }
-  
   const total = subtotal + currentDeliveryFee;
   const orderId = 'PED' + Date.now().toString().slice(-6);
-  
-  // Nombres amigables de ubicaciones
-  const locationNames = {
-    'curazao': 'Unidad Curazao (sin costo)',
-    'Toledo': 'Unidad Toledo (+$3,000)',
-    'Tierra Linda 1': 'Unidad Tierra Linda 1 (+$3,000)',
-    'Tierralinda 2': 'Unidad Tierra Linda 2 (+$3,000)',
-    'La Vida es Bella 1': 'Unidad La Vida es Bella 1 (+$3,000)',
-    'La Vida es Bella 2': 'Unidad La Vida es Bella 2 (+$3,000)',
-    'Madera Esencial': 'Unidad Madera Esencial (+$4,000)',
-    'Madera Natural': 'Unidad Madera Natural (+$4,000)',
-    'Madera Fina': 'Unidad Madera Fina (+$4,000)',
-    'Madera Silvestre': 'Unidad Madera Silvestre (+$4,000)',
-    'Puerta Madera ': 'Unidad Puerta Madera (+$4,000)',
-    'otras': 'Otras zonas (+$4,000)'
-  };
-  
-  // Mensaje para el NEGOCIO
   let messageBusiness = `*🛍️ NUEVO PEDIDO - ${orderId}*\n\n`;
   messageBusiness += `*📋 CLIENTE:*\n`;
   messageBusiness += `• Nombre: ${name}\n`;
   messageBusiness += `• Teléfono: ${phone}\n`;
-  messageBusiness += `• Dirección: ${address}\n`;
-  messageBusiness += `• Zona: ${locationNames[location] || location}\n\n`;
+  messageBusiness += `• Dirección: ${address}\n\n`;
   messageBusiness += `*🍔 PEDIDO:*\n`;
-  
   cart.forEach(item => {
     messageBusiness += `${item.quantity}x ${item.name} - ${(item.price * item.quantity).toLocaleString()}\n`;
   });
-  
   messageBusiness += `\n*💰 RESUMEN:*\n`;
   messageBusiness += `• Subtotal: ${subtotal.toLocaleString()}\n`;
   messageBusiness += `• Domicilio: ${currentDeliveryFee === 0 ? 'GRATIS' : '$' + currentDeliveryFee.toLocaleString()}\n`;
   messageBusiness += `• *TOTAL: ${total.toLocaleString()}*\n`;
-  
   if (notes) {
     messageBusiness += `\n*📝 Observaciones:* ${notes}`;
   }
-  
-// Mensaje para el DOMICILIARIO (solo si hay costo de domicilio)
-if (currentDeliveryFee > 0) {
-  let messageDelivery = `*🛵 NUEVO SERVICIO - ${orderId}*\n\n`;
-  messageDelivery += `*📍 RECOGER EN:*\n${CONFIG.businessAddress}\n\n`;
-  messageDelivery += `*🏠 ENTREGAR A:*\n`;
-  messageDelivery += `• Cliente: ${name}\n`;
-  messageDelivery += `• Teléfono: ${phone}\n`;
-  messageDelivery += `• Dirección: ${address}\n\n`;
-  messageDelivery += `*📦 PEDIDO:*\n`;
-  
-  cart.forEach(item => {
-    messageDelivery += `• ${item.quantity}x ${item.name}\n`;
-  });
-  
-  messageDelivery += `\n*💵 TU GANANCIA: $${currentDeliveryFee.toLocaleString()}*\n`;
-  messageDelivery += `*💰 COBRAR AL CLIENTE: $${total.toLocaleString()}*\n`;
-  messageDelivery += `(Entregar al negocio: $${subtotal.toLocaleString()})\n`;
-  
-  if (notes) {
-    messageDelivery += `\n*📝 Nota:* ${notes}`;
+  window.open(`https://wa.me/${CONFIG.businessPhone}?text=${encodeURIComponent(messageBusiness)}`, '_blank');
+  if (currentDeliveryFee > 0) {
+    setTimeout(() => {
+      const confirmDelivery = confirm('✅ Pedido recibido!\n\n¿Deseas notificar al domiciliario AHORA?\n\n• Presiona OK para enviar\n• Presiona Cancelar para avisar después');
+      if (confirmDelivery) {
+        let messageDelivery = `*🛵 NUEVO SERVICIO - ${orderId}*\n\n`;
+        messageDelivery += `*📍 RECOGER EN:*\n${CONFIG.businessAddress}\n\n`;
+        messageDelivery += `*🏠 ENTREGAR A:*\n`;
+        messageDelivery += `• Cliente: ${name}\n`;
+        messageDelivery += `• Teléfono: ${phone}\n`;
+        messageDelivery += `• Dirección: ${address}\n\n`;
+        messageDelivery += `*📦 PEDIDO:*\n`;
+        cart.forEach(item => {
+          messageDelivery += `• ${item.quantity}x ${item.name}\n`;
+        });
+        messageDelivery += `\n*💵 TU GANANCIA: ${currentDeliveryFee.toLocaleString()}*\n`;
+        messageDelivery += `*💰 COBRAR AL CLIENTE: ${total.toLocaleString()}*\n`;
+        if (notes) {
+          messageDelivery += `\n*📝 Nota:* ${notes}`;
+        }
+        window.open(`https://wa.me/${CONFIG.deliveryPhone}?text=${encodeURIComponent(messageDelivery)}`, '_blank');
+      }
+    }, 1500);
   }
-  
-  messageDelivery += `\n\n⚠️ *Por favor confirma recibido*`;
-  
-  // MEJORA: Primero enviar al negocio
-  window.open(`https://wa.me/${CONFIG.businessPhone}?text=${encodeURIComponent(messageBusiness)}`, '_blank');
-  
-  // Luego preguntar si quiere avisar al domiciliario
-  setTimeout(() => {
-    const confirmDelivery = confirm(
-      '✅ Pedido recibido!\n\n' +
-      '¿Deseas notificar al domiciliario AHORA?\n\n' +
-      '• Presiona OK para enviar el servicio\n' +
-      '• Presiona Cancelar para avisar después manualmente'
-    );
-    
-    if (confirmDelivery) {
-      window.open(`https://wa.me/${CONFIG.deliveryPhone}?text=${encodeURIComponent(messageDelivery)}`, '_blank');
-    }
-  }, 1500);
-  
-} else {
-  // Solo enviar al negocio si es Curazao (domicilio gratis)
-  messageBusiness += `\n\n✅ _Pedido interno en Curazao_`;
-  window.open(`https://wa.me/${CONFIG.businessPhone}?text=${encodeURIComponent(messageBusiness)}`, '_blank');
-}
-  
-  // Limpiar y cerrar
   setTimeout(() => {
     alert('✅ ¡Pedido enviado! Recibirás confirmación pronto.');
     cart = [];
     currentDeliveryFee = 0;
     updateCart();
     toggleCart();
-    
-    // Limpiar formulario
     document.getElementById('customerName').value = '';
     document.getElementById('customerPhone').value = '';
     document.getElementById('deliveryLocation').value = '';
@@ -764,6 +524,5 @@ if (currentDeliveryFee > 0) {
   }, currentDeliveryFee > 0 ? 2000 : 1000);
 }
 </script>
-
 </body>
 </html>
