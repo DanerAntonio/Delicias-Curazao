@@ -48,7 +48,8 @@
   <input type="text" id="deliveryNameInput" placeholder="Tu nombre *" 
     class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500">
   <input type="tel" id="deliveryPhone" placeholder="Tu teléfono *" 
-    class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500">
+    class="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500"
+    onkeypress="if(event.key==='Enter') loginDelivery()">
   <button onclick="loginDelivery()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">
     Entrar
   </button>
@@ -133,18 +134,85 @@
 
 <script>
 /* ========================================
-   CONFIGURACIÓN
+   CONFIGURACIÓN (JSONP)
    ======================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbzwpkeSIFbeVGft7TKd6L8Q4VawKvOmeAE64n1uaWzxIecllaz2kuiHAalO1_mv2eq9/exec";
-
+const API_URL = "https://script.google.com/macros/s/AKfycbwiaf4onlI644nG97sAPTo2-5js7_hXFxT1b1dTmDl_bdeW07nBjjHz8AmfgUgFEXZ2EQ/exec";
 const BUSINESS_ADDRESS = "Unidad Residencial Curazao, Torre 3, Apto 819, Bello, Antioquia";
 
-// Datos del domiciliario
 let deliveryInfo = null;
 let currentOrder = null;
 let myOrders = [];
 let earnings = 0;
 let availableOrders = [];
+
+/* ========================================
+   JSONP REQUEST HELPER
+   ======================================== */
+function jsonpRequest(url, params = {}) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    
+    const queryParams = new URLSearchParams(params);
+    queryParams.append('callback', callbackName);
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    
+    const script = document.createElement('script');
+    script.src = fullUrl;
+    script.onerror = () => {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      reject(new Error('Error de red'));
+    };
+    
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        if (script.parentNode) document.body.removeChild(script);
+        reject(new Error('Timeout'));
+      }
+    }, 15000);
+    
+    document.body.appendChild(script);
+  });
+}
+
+/* ========================================
+   POST CON IFRAME
+   ======================================== */
+function postRequest(action, data) {
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.name = 'postFrame_' + Date.now();
+    document.body.appendChild(iframe);
+    
+    const form = document.createElement('form');
+    form.target = iframe.name;
+    form.method = 'POST';
+    form.action = `${API_URL}?action=${action}`;
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = JSON.stringify(data);
+    form.appendChild(input);
+    
+    document.body.appendChild(form);
+    form.submit();
+    
+    setTimeout(() => {
+      if (form.parentNode) document.body.removeChild(form);
+      if (iframe.parentNode) document.body.removeChild(iframe);
+      resolve({ success: true });
+    }, 2000);
+  });
+}
 
 /* ========================================
    LOGIN
@@ -165,43 +233,36 @@ function loginDelivery() {
   
   loadOrdersFromSheet();
   
-  // Auto-actualizar cada 30 segundos
   setInterval(loadOrdersFromSheet, 30000);
 }
 
 /* ========================================
-   CARGAR PEDIDOS DESDE GOOGLE SHEETS
+   CARGAR PEDIDOS (JSONP)
    ======================================== */
 async function loadOrdersFromSheet() {
   try {
-    const response = await fetch(`${API_URL}?action=getPedidos`);
-    const pedidos = await response.json();
+    const pedidos = await jsonpRequest(API_URL, { action: 'getPedidos' });
     
     if (pedidos.error) {
       console.error('Error:', pedidos.error);
       return;
     }
     
-    // Filtrar solo pedidos NUEVOS y ACEPTADO (disponibles)
     availableOrders = pedidos.filter(p => p.estado === 'NUEVO' || p.estado === 'ACEPTADO');
     
-    // Actualizar estadísticas
     updateStats();
-    
-    // Renderizar
     loadOrders();
     
-    // Actualizar hora
     const now = new Date();
     document.getElementById('lastUpdate').textContent = `Última actualización: ${now.toLocaleTimeString()}`;
     
   } catch (error) {
-    console.error('Error cargando pedidos:', error);
+    console.error('Error:', error);
   }
 }
 
 /* ========================================
-   ACTUALIZAR ESTADÍSTICAS
+   ESTADÍSTICAS
    ======================================== */
 function updateStats() {
   document.getElementById('pendingOrders').textContent = availableOrders.length;
@@ -236,8 +297,6 @@ function loadOrders() {
   container.innerHTML = availableOrders.map(order => {
     const fecha = new Date(order.fecha);
     const fechaStr = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    
-    // Calcular ganancia del domiciliario (el costo de domicilio)
     const ganancia = order.domicilio || 0;
     
     return `
@@ -271,7 +330,7 @@ function loadOrders() {
 }
 
 /* ========================================
-   VER DETALLES DEL PEDIDO
+   VER DETALLES
    ======================================== */
 function viewOrder(orderId) {
   currentOrder = availableOrders.find(o => o.id === orderId);
@@ -284,7 +343,6 @@ function viewOrder(orderId) {
   document.getElementById('modalEarning').textContent = `$${ganancia.toLocaleString()}`;
   document.getElementById('modalTotal').textContent = `$${currentOrder.total.toLocaleString()}`;
   
-  // Formatear productos
   const productosHTML = currentOrder.productos.map(p => 
     `<p class="text-sm">• ${p.qty}x ${p.name}</p>`
   ).join('');
@@ -334,7 +392,6 @@ function viewOrder(orderId) {
 async function acceptOrder() {
   if (!currentOrder || !deliveryInfo) return;
   
-  // Agregar a mis pedidos
   myOrders.push({
     ...currentOrder, 
     status: 'activo', 
@@ -343,32 +400,21 @@ async function acceptOrder() {
   
   earnings += (currentOrder.domicilio || 0);
   
-  // Actualizar en Google Sheets
   try {
-    const response = await fetch(`${API_URL}?action=updateOrder`, {
-      method: 'POST',
-      body: JSON.stringify({ 
-        id: currentOrder.id, 
-        estado: 'EN_CAMINO',
-        domiciliario: deliveryInfo.name
-      })
+    await postRequest('updateOrder', { 
+      id: currentOrder.id, 
+      estado: 'EN_CAMINO',
+      domiciliario: deliveryInfo.name
     });
     
-    const result = await response.json();
+    availableOrders = availableOrders.filter(o => o.id !== currentOrder.id);
     
-    if (result.success) {
-      // Remover de disponibles
-      availableOrders = availableOrders.filter(o => o.id !== currentOrder.id);
-      
-      updateStats();
-      alert(`✅ Pedido ${currentOrder.id} aceptado!\nRevisa "Mis Pedidos Activos"`);
-      
-      closeOrderModal();
-      loadOrders();
-      loadMyOrders();
-    } else {
-      alert('❌ Error al actualizar el pedido: ' + result.error);
-    }
+    updateStats();
+    alert(`✅ Pedido ${currentOrder.id} aceptado!\nRevisa "Mis Pedidos Activos"`);
+    
+    closeOrderModal();
+    loadOrders();
+    loadMyOrders();
     
   } catch (error) {
     console.error('Error:', error);
@@ -377,11 +423,10 @@ async function acceptOrder() {
 }
 
 /* ========================================
-   RENDERIZAR MIS PEDIDOS
+   MIS PEDIDOS ACTIVOS
    ======================================== */
 function loadMyOrders() {
   const container = document.getElementById('myOrdersList');
-  
   const activeOrders = myOrders.filter(o => o.status === 'activo');
   
   if (activeOrders.length === 0) {
@@ -433,31 +478,20 @@ async function completeOrder(orderId) {
   }
   
   try {
-    // Actualizar en Google Sheets
-    const response = await fetch(`${API_URL}?action=updateOrder`, {
-      method: 'POST',
-      body: JSON.stringify({ 
-        id: orderId, 
-        estado: 'ENTREGADO'
-      })
+    await postRequest('updateOrder', { 
+      id: orderId, 
+      estado: 'ENTREGADO'
     });
     
-    const result = await response.json();
+    order.status = 'completado';
+    updateStats();
     
-    if (result.success) {
-      order.status = 'completado';
-      updateStats();
-      
-      alert(`✅ ¡Pedido ${orderId} completado!\n💰 Ganaste: $${(order.domicilio || 0).toLocaleString()}`);
-      
-      // Remover de activos después de 2 segundos
-      setTimeout(() => {
-        myOrders = myOrders.filter(o => o.id !== orderId);
-        loadMyOrders();
-      }, 2000);
-    } else {
-      alert('❌ Error al completar el pedido: ' + result.error);
-    }
+    alert(`✅ ¡Pedido ${orderId} completado!\n💰 Ganaste: $${(order.domicilio || 0).toLocaleString()}`);
+    
+    setTimeout(() => {
+      myOrders = myOrders.filter(o => o.id !== orderId);
+      loadMyOrders();
+    }, 2000);
     
   } catch (error) {
     console.error('Error:', error);
