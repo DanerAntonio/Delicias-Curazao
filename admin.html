@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <title>Admin - Delicias Curazao</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ea580c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .loading {
@@ -157,10 +165,19 @@
    CONFIGURACIÓN (JSONP)
    ======================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwiaf4onlI644nG97sAPTo2-5js7_hXFxT1b1dTmDl_bdeW07nBjjHz8AmfgUgFEXZ2EQ/exec";
-const ADMIN_PASSWORD = "admin123";
+
+// 🔐 CAMBIA ESTA CONTRASEÑA POR UNA MÁS SEGURA
+const ADMIN_PASSWORD = "Delicias2025!";
 
 let ORDERS = [];
 let CURRENT_FILTER = "ALL";
+
+/* PWA - Registrar Service Worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log(err));
+  });
+}
 
 /* ========================================
    JSONP REQUEST HELPER
