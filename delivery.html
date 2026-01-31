@@ -314,25 +314,151 @@ function cerrarSesion() {
 
 window.addEventListener('load', async () => {
   if (cargarSesion()) {
+    // Ya tiene sesión guardada
     document.getElementById('deliveryName').textContent = deliveryInfo.nombre;
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainScreen').classList.remove('hidden');
     
-    // Cargar datos del servidor
+    // Cargar datos actualizados del servidor
     try {
       const data = await jsonpRequest(API_URL, { action: 'getDomiciliario', telefono: deliveryInfo.telefono });
       if (!data.error) {
         earnings = data.ganancias_total || 0;
         efectivoPendiente = data.efectivo_pendiente || 0;
+        
+        // Actualizar deliveryInfo con datos completos del servidor
+        deliveryInfo = { ...deliveryInfo, ...data };
+        guardarSesion();
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error cargando datos:', e);
+    }
     
     updateStats();
     loadMyOrders();
     loadOrders();
     setInterval(loadOrders, 30000);
+  } else {
+    // No tiene sesión, verificar si ya está registrado
+    mostrarLoginORegistro();
   }
 });
+
+function mostrarLoginORegistro() {
+  // Mostrar pantalla de login simple
+  document.getElementById('loginScreen').innerHTML = `
+    <div class="text-center mb-6">
+      <div class="text-5xl mb-3">🛵</div>
+      <h2 class="text-2xl font-bold">Ingreso Domiciliario</h2>
+      <p class="text-sm text-gray-600 mt-2">Ingresa tu número para continuar</p>
+    </div>
+    
+    <div class="space-y-3">
+      <input type="tel" id="loginTelefono" placeholder="Tu WhatsApp (3001234567)" class="w-full px-4 py-3 border rounded-lg">
+      <button onclick="verificarDomiciliario()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600">
+        Continuar
+      </button>
+      <button onclick="mostrarFormularioRegistro()" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-bold hover:bg-gray-300">
+        Registrarme por primera vez
+      </button>
+    </div>
+  `;
+}
+
+async function verificarDomiciliario() {
+  const telefono = document.getElementById('loginTelefono').value.trim();
+  
+  if (!telefono || telefono.length < 10) {
+    alert('⚠️ Ingresa un número válido');
+    return;
+  }
+  
+  try {
+    const data = await jsonpRequest(API_URL, { action: 'getDomiciliario', telefono: telefono });
+    
+    if (data.error) {
+      // No está registrado
+      alert('⚠️ No estás registrado. Por favor completa el registro.');
+      mostrarFormularioRegistro(telefono);
+    } else {
+      // Ya está registrado, hacer login
+      deliveryInfo = data;
+      earnings = data.ganancias_total || 0;
+      efectivoPendiente = data.efectivo_pendiente || 0;
+      guardarSesion();
+      
+      document.getElementById('deliveryName').textContent = data.nombre;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainScreen').classList.remove('hidden');
+      
+      updateStats();
+      loadMyOrders();
+      loadOrders();
+      setInterval(loadOrders, 30000);
+    }
+  } catch (error) {
+    alert('❌ Error de conexión. Intenta nuevamente.');
+  }
+}
+
+function mostrarFormularioRegistro(telefonoPrefill = '') {
+  document.getElementById('loginScreen').innerHTML = `
+    <div class="text-center mb-6">
+      <div class="text-5xl mb-3">🛵</div>
+      <h2 class="text-2xl font-bold">Registro Domiciliario</h2>
+      <p class="text-sm text-gray-600 mt-2">Completa tu perfil (solo una vez)</p>
+    </div>
+    
+    <div class="space-y-3">
+      <input type="text" id="nombre" placeholder="Nombre completo *" class="w-full px-4 py-3 border rounded-lg">
+      <input type="tel" id="telefono" value="${telefonoPrefill}" placeholder="WhatsApp (3001234567) *" class="w-full px-4 py-3 border rounded-lg">
+      <input type="text" id="cedula" placeholder="Cédula *" class="w-full px-4 py-3 border rounded-lg">
+      
+      <div class="grid grid-cols-2 gap-3">
+        <select id="tipo_vehiculo" class="px-4 py-3 border rounded-lg">
+          <option value="">Vehículo *</option>
+          <option value="Moto">Moto</option>
+          <option value="Bicicleta">Bicicleta</option>
+          <option value="Carro">Carro</option>
+          <option value="A pie">A pie</option>
+        </select>
+        <input type="text" id="placa" placeholder="Placa (Opcional)" class="px-4 py-3 border rounded-lg">
+      </div>
+      
+      <input type="text" id="direccion" placeholder="Tu dirección *" class="w-full px-4 py-3 border rounded-lg">
+      
+      <div class="border-t pt-3">
+        <p class="font-semibold mb-2">💳 Información de Pago:</p>
+        <input type="tel" id="cuenta_nequi" placeholder="Número Nequi" class="w-full px-4 py-3 border rounded-lg mb-2">
+        
+        <div class="grid grid-cols-2 gap-3">
+          <select id="banco" class="px-4 py-3 border rounded-lg">
+            <option value="">Banco</option>
+            <option value="Bancolombia">Bancolombia</option>
+            <option value="Davivienda">Davivienda</option>
+            <option value="Nequi">Nequi</option>
+            <option value="Daviplata">Daviplata</option>
+          </select>
+          <select id="tipo_cuenta" class="px-4 py-3 border rounded-lg">
+            <option value="">Tipo Cuenta</option>
+            <option value="Ahorros">Ahorros</option>
+            <option value="Corriente">Corriente</option>
+          </select>
+        </div>
+        
+        <input type="text" id="numero_cuenta" placeholder="Número de cuenta" class="w-full px-4 py-3 border rounded-lg mt-2">
+      </div>
+      
+      <button onclick="registrarDomiciliario()" class="w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600">
+        Completar Registro
+      </button>
+      
+      <button onclick="mostrarLoginORegistro()" class="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300">
+        ← Volver
+      </button>
+    </div>
+  `;
+}
 
 async function registrarDomiciliario() {
   const data = {
@@ -447,30 +573,52 @@ function viewOrder(orderId) {
 async function acceptOrder() {
   if (!currentOrder) return;
   
+  // Verificar que no esté ya en mis pedidos (evitar duplicados)
+  if (myOrders.find(o => o.id === currentOrder.id)) {
+    alert('⚠️ Ya aceptaste este pedido');
+    closeModal();
+    return;
+  }
+  
+  // Agregar a mis pedidos
   myOrders.push({...currentOrder, status: 'activo', acceptedAt: new Date()});
-  earnings += (currentOrder.domicilio || 0);
+  
+  // IMPORTANTE: Sumar ganancia SOLO UNA VEZ
+  const gananciaDelPedido = currentOrder.domicilio || 0;
+  earnings += gananciaDelPedido;
+  
   guardarSesion();
   
   try {
+    // Actualizar pedido en Sheets
     await postRequest('updateOrder', { 
       id: currentOrder.id, 
       estado: 'EN_CAMINO',
       domiciliario: `${deliveryInfo.nombre} - ${deliveryInfo.telefono}`
     });
     
+    // Actualizar ganancias en Sheets
     await postRequest('updateDomiciliario', {
       telefono: deliveryInfo.telefono,
       ganancias_total: earnings
     });
     
+    // Quitar de disponibles
     availableOrders = availableOrders.filter(o => o.id !== currentOrder.id);
+    
     updateStats();
-    alert('✅ Pedido aceptado!');
+    alert(`✅ Pedido ${currentOrder.id} aceptado!\n\n💰 Ganancia: ${gananciaDelPedido.toLocaleString()}\n📊 Total acumulado: ${earnings.toLocaleString()}`);
+    
     closeModal();
     renderOrders();
     loadMyOrders();
+    
   } catch (error) {
-    alert('❌ Error al aceptar');
+    // Si falla, revertir la suma
+    earnings -= gananciaDelPedido;
+    myOrders = myOrders.filter(o => o.id !== currentOrder.id);
+    guardarSesion();
+    alert('❌ Error al aceptar pedido. Intenta nuevamente.');
   }
 }
 
