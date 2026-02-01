@@ -80,6 +80,12 @@
         </svg>
         <span id="cartCount" class="hidden absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold cart-badge">0</span>
       </button>
+      
+      <a href="seguimiento.html" class="bg-blue-500 text-white p-3 rounded-full hover:bg-blue-600 transition-all hover:scale-110">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+        </svg>
+      </a>
     </div>
   </div>
 </header>
@@ -263,6 +269,15 @@
    CONFIGURACIÓN DE LA API (JSONP)
    ======================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwiaf4onlI644nG97sAPTo2-5js7_hXFxT1b1dTmDl_bdeW07nBjjHz8AmfgUgFEXZ2EQ/exec";
+
+/* PWA - Registrar Service Worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('✅ PWA instalada'))
+      .catch(err => console.log('Service Worker error:', err));
+  });
+}
 
 /* DATOS DEL NEGOCIO */
 let CONFIG = {
@@ -813,7 +828,10 @@ async function sendOrder() {
     
     // Limpiar y cerrar
     setTimeout(() => {
-      alert(`✅ ¡Pedido ${orderId} enviado correctamente!\n\nRecibirás confirmación pronto.`);
+      const linkSeguimiento = `${window.location.origin}${window.location.pathname.replace('index.html', '')}seguimiento.html?id=${orderId}`;
+      
+      alert(`✅ ¡Pedido ${orderId} enviado correctamente!\n\n🔍 Rastrea tu pedido aquí:\n${linkSeguimiento}\n\nRecibirás confirmación por WhatsApp pronto.`);
+      
       cart = [];
       currentDeliveryFee = 0;
       updateCart();
