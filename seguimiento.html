@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rastrear Pedido - Delicias Curazao</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    
+    .step-active { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
+    .step-completed { background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%); }
+    .step-pending { background: #e5e7eb; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-orange-50 to-yellow-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white shadow-md">
+  <div class="max-w-3xl mx-auto px-4 py-4">
+    <h1 class="text-2xl font-bold text-orange-600">🍔 Delicias Curazao</h1>
+    <p class="text-sm text-gray-600">Rastrea tu pedido en tiempo real</p>
+  </div>
+</header>
+
+<!-- BUSCADOR -->
+<div class="max-w-3xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <h2 class="text-xl font-bold mb-4">🔍 Buscar mi pedido</h2>
+    <div class="flex gap-3">
+      <input type="text" id="searchOrderId" placeholder="Ingresa tu ID de pedido (Ej: PED123456)" 
+        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+        onkeypress="if(event.key==='Enter') buscarPedido()">
+      <button onclick="buscarPedido()" 
+        class="bg-orange-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition">
+        Buscar
+      </button>
+    </div>
+    <p class="text-xs text-gray-500 mt-2">💡 Tip: Encuentra tu ID en el mensaje de WhatsApp que recibiste</p>
+  </div>
+
+  <!-- RESULTADO -->
+  <div id="resultado" class="hidden">
+    <!-- Estado del pedido -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-800" id="orderId">-</h3>
+          <p class="text-sm text-gray-600" id="orderFecha">-</p>
+        </div>
+        <div class="text-right">
+          <p class="text-3xl font-bold text-orange-600" id="orderTotal">$0</p>
+        </div>
+      </div>
+
+      <!-- Timeline de estados -->
+      <div class="space-y-4">
+        <!-- NUEVO -->
+        <div id="stepNuevo" class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-pending">
+            1
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-gray-800">Pedido Recibido</p>
+            <p class="text-sm text-gray-600">Tu pedido ha sido confirmado</p>
+          </div>
+        </div>
+
+        <!-- ACEPTADO -->
+        <div id="stepAceptado" class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-pending">
+            2
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-gray-800">En Preparación</p>
+            <p class="text-sm text-gray-600">Estamos preparando tu pedido</p>
+          </div>
+        </div>
+
+        <!-- EN_CAMINO -->
+        <div id="stepEnCamino" class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-pending">
+            3
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-gray-800">En Camino</p>
+            <p class="text-sm text-gray-600" id="domiciliarioInfo">Tu pedido está en camino</p>
+          </div>
+        </div>
+
+        <!-- ENTREGADO -->
+        <div id="stepEntregado" class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-pending">
+            ✓
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-gray-800">Entregado</p>
+            <p class="text-sm text-gray-600">¡Disfruta tu comida!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalles del pedido -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-bold mb-4">📦 Detalles del Pedido</h3>
+      
+      <div class="space-y-3 mb-4">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Cliente:</span>
+          <span class="font-semibold" id="orderCliente">-</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Teléfono:</span>
+          <span class="font-semibold" id="orderTelefono">-</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-600">Dirección:</span>
+          <span class="font-semibold" id="orderDireccion">-</span>
+        </div>
+      </div>
+
+      <div class="border-t pt-4">
+        <p class="font-semibold mb-2">🍔 Productos:</p>
+        <div id="orderProductos" class="space-y-1 text-sm"></div>
+      </div>
+
+      <div class="border-t mt-4 pt-4 space-y-1 text-sm">
+        <div class="flex justify-between">
+          <span>Subtotal:</span>
+          <span id="orderSubtotal">$0</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Domicilio:</span>
+          <span id="orderDomicilio">$0</span>
+        </div>
+        <div class="flex justify-between text-lg font-bold text-orange-600 border-t pt-2">
+          <span>Total:</span>
+          <span id="orderTotalDetalle">$0</span>
+        </div>
+      </div>
+
+      <!-- Método de pago -->
+      <div id="metodoPagoInfo" class="mt-4 p-3 bg-green-50 border border-green-200 rounded hidden">
+        <p class="text-sm font-semibold text-green-800">💳 Método de pago: <span id="metodoPagoText">-</span></p>
+      </div>
+    </div>
+
+    <!-- Botón contactar -->
+    <div class="mt-6">
+      <a href="https://wa.me/573027012881" target="_blank" 
+        class="block w-full bg-green-500 text-white py-4 rounded-lg font-bold hover:bg-green-600 transition text-center">
+        📞 Contactar al Negocio
+      </a>
+    </div>
+  </div>
+
+  <!-- No encontrado -->
+  <div id="noEncontrado" class="hidden bg-white rounded-lg shadow-lg p-8 text-center">
+    <div class="text-6xl mb-4">🔍</div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">Pedido no encontrado</h3>
+    <p class="text-gray-600">Verifica que el ID sea correcto</p>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyUMuKRlUMrm8yUrvzIWUauUdS5RTWXuQXmtGLVtj6XrJuI_kl7-WscXGfIsxwpQnKF2w/exec";
+
+function jsonpRequest(url, params = {}) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    const queryParams = new URLSearchParams(params);
+    queryParams.append('callback', callbackName);
+    const script = document.createElement('script');
+    script.src = `${url}?${queryParams.toString()}`;
+    script.onerror = () => {
+      delete window[callbackName];
+      document.body.removeChild(script);
+      reject(new Error('Error de red'));
+    };
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        if (script.parentNode) document.body.removeChild(script);
+        reject(new Error('Timeout'));
+      }
+    }, 15000);
+    document.body.appendChild(script);
+  });
+}
+
+async function buscarPedido() {
+  const searchId = document.getElementById('searchOrderId').value.trim().toUpperCase();
+  
+  if (!searchId) {
+    alert('⚠️ Ingresa el ID de tu pedido');
+    return;
+  }
+  
+  try {
+    const pedidos = await jsonpRequest(API_URL, { action: 'getPedidos' });
+    
+    if (pedidos.error) {
+      alert('❌ Error al buscar pedido');
+      return;
+    }
+    
+    const pedido = pedidos.find(p => p.id === searchId);
+    
+    if (!pedido) {
+      document.getElementById('resultado').classList.add('hidden');
+      document.getElementById('noEncontrado').classList.remove('hidden');
+      return;
+    }
+    
+    guardarUltimoID(searchId);
+    mostrarPedido(pedido);
+    
+  } catch (error) {
+    alert('❌ Error de conexión');
+  }
+}
+
+function mostrarPedido(pedido) {
+  document.getElementById('resultado').classList.remove('hidden');
+  document.getElementById('noEncontrado').classList.add('hidden');
+  
+  // Info básica
+  document.getElementById('orderId').textContent = pedido.id;
+  const fecha = new Date(pedido.fecha);
+  document.getElementById('orderFecha').textContent = fecha.toLocaleString('es-CO');
+  document.getElementById('orderTotal').textContent = `$${pedido.total.toLocaleString()}`;
+  
+  // Detalles
+  document.getElementById('orderCliente').textContent = pedido.cliente;
+  document.getElementById('orderTelefono').textContent = pedido.telefono;
+  document.getElementById('orderDireccion').textContent = pedido.direccion;
+  document.getElementById('orderSubtotal').textContent = `$${pedido.subtotal.toLocaleString()}`;
+  document.getElementById('orderDomicilio').textContent = pedido.domicilio === 0 ? 'GRATIS' : `$${pedido.domicilio.toLocaleString()}`;
+  document.getElementById('orderTotalDetalle').textContent = `$${pedido.total.toLocaleString()}`;
+  
+  // Productos
+  document.getElementById('orderProductos').innerHTML = pedido.productos.map(p => 
+    `<div class="flex justify-between"><span>${p.qty}x ${p.name}</span><span class="font-semibold">$${(p.price * p.qty).toLocaleString()}</span></div>`
+  ).join('');
+  
+  // Método de pago
+  if (pedido.metodo_pago) {
+    document.getElementById('metodoPagoInfo').classList.remove('hidden');
+    document.getElementById('metodoPagoText').textContent = pedido.metodo_pago + (pedido.comprobante ? ` - ${pedido.comprobante}` : '');
+  }
+  
+  // Timeline
+  actualizarTimeline(pedido.estado, pedido.domiciliario);
+}
+
+function actualizarTimeline(estado, domiciliario) {
+  // Reset
+  ['stepNuevo', 'stepAceptado', 'stepEnCamino', 'stepEntregado'].forEach(id => {
+    const el = document.getElementById(id).querySelector('div');
+    el.className = 'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-pending';
+  });
+  
+  const estados = {
+    'NUEVO': ['stepNuevo'],
+    'ACEPTADO': ['stepNuevo', 'stepAceptado'],
+    'EN_CAMINO': ['stepNuevo', 'stepAceptado', 'stepEnCamino'],
+    'ENTREGADO': ['stepNuevo', 'stepAceptado', 'stepEnCamino', 'stepEntregado']
+  };
+  
+  const completados = estados[estado] || [];
+  const actual = completados[completados.length - 1];
+  
+  completados.forEach((stepId, index) => {
+    const el = document.getElementById(stepId).querySelector('div');
+    if (stepId === actual) {
+      el.className = 'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-active animate-pulse';
+    } else {
+      el.className = 'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold step-completed';
+    }
+  });
+  
+  // Info domiciliario
+  if (domiciliario && estado === 'EN_CAMINO') {
+    const nombre = domiciliario.split(' - ')[0];
+    document.getElementById('domiciliarioInfo').innerHTML = `🛵 ${nombre} está llevando tu pedido`;
+  }
+}
+
+// Permitir buscar con Enter
+document.getElementById('searchOrderId').focus();
+
+// Si viene ID en la URL, buscarlo automáticamente
+const urlParams = new URLSearchParams(window.location.search);
+const idFromUrl = urlParams.get('id');
+if (idFromUrl) {
+  document.getElementById('searchOrderId').value = idFromUrl;
+  buscarPedido();
+}
+
+// Guardar último ID buscado
+function guardarUltimoID(id) {
+  localStorage.setItem('lastOrderId', id);
+}
+
+function cargarUltimoID() {
+  const lastId = localStorage.getItem('lastOrderId');
+  if (lastId && !idFromUrl) {
+    document.getElementById('searchOrderId').value = lastId;
+  }
+}
+
+cargarUltimoID();
+</script>
+
+</body>
+</html>
